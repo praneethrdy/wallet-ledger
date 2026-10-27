@@ -1,0 +1,19 @@
+# Build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Local secrets — only .env.example is committed
+.env
+*.local.yml
+
+# OS
+.DS_Store
+Thumbs.db

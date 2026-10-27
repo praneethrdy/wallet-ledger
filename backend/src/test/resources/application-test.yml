@@ -1,0 +1,5 @@
+# Connection details come from Testcontainers via @DynamicPropertySource (AbstractIntegrationTest).
+logging:
+  level:
+    org.testcontainers: INFO
+    org.flywaydb: INFO

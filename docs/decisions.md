@@ -1,0 +1,81 @@
+# Architecture Decision Records
+
+Short records of decisions that are non-obvious or that deviate from the spec. Format: context → decision → consequences.
+
+ADRs still to be written as their steps land: derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design (Step 7), 404 vs 403 for foreign resources (Step 4), no Redis (Step 7), CSRF stance (Step 3).
+
+---
+
+## ADR-001: PostgreSQL with two database roles (least privilege)
+
+**Status:** Accepted (Step 1)
+
+**Context.** The service holds money-shaped data. If an application bug or SQL injection happens, the damage should be limited by the database, not just by Java code.
+
+**Decision.**
+- `wallet_owner` owns the schema. Only Flyway connects as it, to run DDL.
+- `wallet_app` is the runtime role. It can SELECT/INSERT/UPDATE/DELETE on ordinary tables through default privileges. On the ledger tables it can only SELECT and INSERT.
+- Both roles are created by `docker/postgres/init/01-roles.sh`. The Testcontainers base test runs the same script, so tests exercise the same privileges as dev/prod.
+
+**Consequences.** Spring needs two sets of credentials (`spring.datasource.*` and `spring.flyway.*`). Migrations that grant privileges use the Flyway placeholder `${app_role}`. Tests that must bypass triggers (cleanup, or injecting corruption for reconciliation tests) use a separate superuser connection that the app never has.
+
+---
+
+## ADR-002: Money as BIGINT minor units
+
+**Status:** Accepted (Step 1, schema)
+
+**Context.** Floating point cannot represent 0.10 exactly, so `0.1 + 0.2 != 0.3`. Rounding errors in a ledger are correctness bugs.
+
+**Decision.** Store amounts as `BIGINT` in minor units (paise for INR). In Java, use a `Money` value object with `Math.addExact`/`subtractExact`, which throw on overflow instead of wrapping (Step 2). `ledger_entries.amount` is always positive, and the sign lives in `direction`.
+
+**Consequences.** Every currency needs a known minor-unit exponent (INR = 2). FX rates (Phase 3) are the only place decimals appear, as `NUMERIC(20,10)`, with explicit HALF_EVEN rounding back to minor units.
+
+---
+
+## ADR-003: Enforce ledger invariants in the database, not only in Java
+
+**Status:** Accepted (Step 1)
+
+**Context.** `LedgerService` will validate that every transaction balances. But a future code path, a manual SQL fix or a bug can bypass the service.
+
+**Decision.**
+- A `BEFORE UPDATE OR DELETE` trigger on `transactions` and `ledger_entries` rejects the change (append-only), and REVOKE removes UPDATE/DELETE/TRUNCATE from the app role.
+- A `CONSTRAINT TRIGGER ... DEFERRABLE INITIALLY DEFERRED` checks at COMMIT that each transaction has at least one debit and one credit and balances per currency.
+
+Extra guards added beyond the spec, all cheap:
+- a statement-level `BEFORE TRUNCATE` trigger, because row triggers don't fire on TRUNCATE;
+- a composite FK `(account_id, currency) → accounts (id, currency)`, so a leg can't carry a different currency from its account;
+- `CHECK ((type = 'REVERSAL') = (reversal_of_transaction_id IS NOT NULL))` and a no-self-reversal check;
+- trigger functions pin `search_path = public`, so they can't be hijacked by an object with the same name in another schema.
+
+**Consequences.** Corrections can only happen by posting reversing entries, so history is never rewritten. The deferred check costs one aggregate query per inserted leg at commit, which is cheap at this scale. Tests can't clean ledger tables as the app role, so test cleanup uses a superuser connection with `session_replication_role = replica`.
+
+---
+
+## ADR-004: `transactions.idempotency_key_id` — foreign key or not?
+
+**Status:** Accepted (Step 1). This deviates from the spec.
+
+**Context.** The spec lists `idempotency_key_id` as a nullable FK to `idempotency_keys`. It also says idempotency keys have a 24h TTL and are deleted by a daily cleanup job. And `transactions` is append-only.
+
+The ON DELETE options for that FK all fail:
+- `NO ACTION` / `RESTRICT`: the cleanup job can't delete any key that produced a transaction, which is most of them. The TTL becomes meaningless and the table grows forever.
+- `SET NULL`: this is an UPDATE on `transactions`, so the append-only trigger rejects it and the cleanup fails.
+- `CASCADE`: this deletes the money transaction. Unthinkable.
+
+**Decision.** Keep `idempotency_key_id` as a plain `UUID` column with no foreign key. It is a soft reference: while the key exists you can join to it for debugging, and after cleanup it remains a historical identifier.
+
+**Consequences.** The DB doesn't guarantee that the ID pointed to a real key. That's acceptable: the column is diagnostic, and correctness of idempotency is enforced by `UNIQUE (user_id, key)` on `idempotency_keys` at request time, not by this link.
+
+---
+
+## ADR-005: Schema conventions and migration layout
+
+**Status:** Accepted (Step 1)
+
+- **IDs.** Public IDs are UUIDs generated by the application (v7, time-ordered, so B-tree inserts stay local). Columns have no DB default, so a missing ID fails loudly. `ledger_entries.id` and `audit_log.id` are internal BIGSERIALs, never exposed, and give a total order for keyset pagination.
+- **Enumerations** are `TEXT + CHECK`, not Postgres `ENUM`. Adding a value is a constraint swap, not `ALTER TYPE`, and Hibernate maps them as strings.
+- **Migration order.** V1 holds the core tables, V2 holds the ledger (transactions, ledger_entries and triggers). The `deposits` table is added in Step 8 because it references `transactions`.
+- **`reconciliation_runs.trigger_type`** instead of the spec's `trigger`, to avoid quoting a SQL keyword.
+- **`audit_log.actor_user_id`** has no FK, so audit writes never fail on an unknown or anonymous actor (e.g. failed logins).

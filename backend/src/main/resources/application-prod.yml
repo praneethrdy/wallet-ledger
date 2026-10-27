@@ -1,0 +1,10 @@
+# Production: no defaults. Missing env vars fail startup instead of falling back to dev values.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_APP_USER}
+    password: ${DB_APP_PASSWORD}
+  flyway:
+    url: ${DB_URL}
+    user: ${DB_OWNER_USER}
+    password: ${DB_OWNER_PASSWORD}
