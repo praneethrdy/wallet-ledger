@@ -12,6 +12,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.lang.Nullable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -58,6 +60,23 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .map(v -> new FieldViolation(lastNode(v.getPropertyPath().toString()), v.getMessage()))
                 .toList();
         return validationFailed(ex, errors, request);
+    }
+
+    /**
+     * @PreAuthorize failures are thrown inside the controller call, so they reach this advice
+     * instead of Spring Security's filter. Without this handler the catch-all below would turn
+     * every "forbidden" into a 500.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+        ProblemDetail body = problem(ErrorCode.FORBIDDEN, "You do not have permission to perform this action");
+        return handleExceptionInternal(ex, body, new HttpHeaders(), ErrorCode.FORBIDDEN.status(), request);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<Object> handleAuthentication(AuthenticationException ex, WebRequest request) {
+        ProblemDetail body = problem(ErrorCode.UNAUTHORIZED, "Authentication required");
+        return handleExceptionInternal(ex, body, new HttpHeaders(), ErrorCode.UNAUTHORIZED.status(), request);
     }
 
     /** Anything unexpected is a bug: log it in full, tell the client nothing internal. */

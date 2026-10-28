@@ -2,7 +2,7 @@
 
 Short records of decisions that are non-obvious or that deviate from the spec. Format: context → decision → consequences.
 
-ADRs still to be written as their steps land: 404 vs 403 for foreign resources (Step 4), derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design and no Redis (Step 7).
+ADRs still to be written as their steps land: derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design and no Redis (Step 7).
 
 ---
 
@@ -141,3 +141,38 @@ The ON DELETE options for that FK all fail:
 **CSRF disabled.** CSRF attacks ride on credentials the browser attaches automatically, i.e. cookies. This API authenticates only by an `Authorization: Bearer` header, which a browser never attaches on its own, so a malicious site can't forge an authenticated request. The Next.js BFF *will* hold a browser session cookie, so CSRF protection belongs there.
 
 **Emails** are lower-cased in Java before storing or looking them up. The `citext` column is a backstop: a JDBC `varchar` parameter can make Postgres compare `citext = varchar` as text, which is case-sensitive.
+
+---
+
+## ADR-009: Someone else's resource returns 404, not 403
+
+**Status:** Accepted (Step 4)
+
+**Context.** A customer requests `GET /wallets/{id}` for a wallet they don't own. A `403 Forbidden` would confirm that the wallet *exists*. That lets an attacker probe IDs and learn which ones are real, the first step of most account-takeover and fraud attempts.
+
+**Decision.**
+- **Roles** are checked at the endpoint with capability annotations (ADR-010). A wrong role gets **403**, because the endpoint's existence is public anyway: it's in the OpenAPI spec.
+- **Ownership** is checked in the service by *scoping the query*, not by loading and then comparing:
+  ```java
+  wallets.findByIdAndOwnerUserId(id, caller.id())
+         .orElseThrow(() -> ApiException.notFound("Wallet"));
+  ```
+  "Doesn't exist" and "not yours" are then literally the same code path: the same 404, the same body, and roughly the same timing.
+- The owner always comes from the verified JWT (`AuthUser`), never from a path, query or body parameter.
+- Customer endpoints (`/api/v1/wallets`, `/transactions`, `/transfers`, ...) always mean **the caller's own** resources, for every role. Staff see other users' data only through `/support` and `/admin` endpoints, which are role-gated and audited.
+
+**Consequences.** Support staff debugging a "wallet not found" can't tell from the response whether the wallet exists. They use the audited support API instead.
+
+---
+
+## ADR-010: RBAC as capability annotations, with a build-time guard
+
+**Status:** Accepted (Step 4)
+
+**Decision.** There is one annotation per row of the spec's RBAC matrix (`@CanHoldWallets`, `@CanMoveMoney`, `@CanViewAnyUser`, `@AdminOnly`), each a meta-annotation over `@PreAuthorize`. There is no role hierarchy, because ADMIN is not a superset of CUSTOMER: an admin may not move customer money.
+
+**Guard.** `EndpointAccessRulesIT` scans every mapped `/api/v1/**` handler and fails the build if one has no `@PreAuthorize`-based annotation. Exempt are `/auth`, `/me` and `/webhooks`, which are authenticated differently. Without the guard, a forgotten annotation would silently open an endpoint to every logged-in user.
+
+**Why roles come from the JWT, not the DB.** It's cheap: no lookup per request. The cost is that a role change takes effect only when the next access token is issued (at most 15 min later). Freezing a user stops refresh immediately (ADR-008).
+
+**`@PreAuthorize` failures** are thrown inside the controller call, so they reach `@RestControllerAdvice` rather than Spring Security's filter. `GlobalExceptionHandler` maps `AccessDeniedException` to 403 and `AuthenticationException` to 401. Without that, the catch-all handler would turn them into 500s.

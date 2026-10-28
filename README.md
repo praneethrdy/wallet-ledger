@@ -23,6 +23,17 @@ Dev defaults are in [.env.example](.env.example). Copy it to `.env` to override 
 
 If you edit a migration that already ran locally, reset the dev database with `docker compose down -v`. Never do this to a shared or production DB; fix forward with a new migration instead.
 
+## Dev seed users
+
+Created on startup in the `dev` profile only (`DevDataSeeder`). **Never use these outside local dev.**
+
+| Email | Password | Role |
+|---|---|---|
+| admin@wallet.local | admin-pass-123 | ADMIN |
+| support@wallet.local | support-pass-123 | SUPPORT |
+| alice@wallet.local | alice-pass-123 | CUSTOMER |
+| bob@wallet.local | bob-pass-123 | CUSTOMER |
+
 ## Configuration
 
 | Env var | Purpose | Dev default |

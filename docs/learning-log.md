@@ -77,3 +77,23 @@ _Interview Q&A for this step: pending._
 - `@WebMvcTest` pulls in Spring Security's auto-config. Exclude it for tests that aren't about security.
 
 _Interview Q&A for this step: pending._
+
+---
+
+## Phase 1 · Step 4: RBAC and ownership
+
+**Authentication vs authorization.** Authentication asks *who are you?* (Step 3: the JWT). Authorization asks *what may you do?*, and it has two layers:
+- **Role (RBAC):** may a SUPPORT user call `/reverse` at all? Checked at the endpoint, and failure is **403**.
+- **Ownership:** is wallet X *yours*? Checked in the service, and failure is **404** (ADR-009).
+
+**Why 404 for someone else's resource.** A 403 confirms that the wallet exists. Scoping the query (`findByIdAndOwnerUserId`) makes "missing" and "not yours" the same path, with the same response and nothing to probe.
+
+**Never trust client-supplied identity.** The user ID always comes from the verified token (`AuthUser`), never from `?userId=` or the body. Otherwise changing one number in a request gives access to another account, which is called IDOR (Insecure Direct Object Reference) and is consistently near the top of the OWASP API Security Top 10.
+
+**Method security.** `@PreAuthorize("hasRole('ADMIN')")` runs an access check before the method executes. Wrapping it in a named meta-annotation (`@AdminOnly`) writes each rule once and makes controllers read like the RBAC table.
+
+**Exceptions take different paths.** Filter-level failures (no or bad token) go to the `AuthenticationEntryPoint`. `@PreAuthorize` failures happen inside the controller call and reach `@RestControllerAdvice`. Both must produce the same ProblemDetail, and a catch-all handler can silently turn 403s into 500s.
+
+**Guard tests.** Some rules ("every endpoint declares who may call it") are best enforced by a test that inspects the application itself. We proved it by adding an unprotected endpoint and watching the build fail with the endpoint's name.
+
+_Interview Q&A for this step: pending._
