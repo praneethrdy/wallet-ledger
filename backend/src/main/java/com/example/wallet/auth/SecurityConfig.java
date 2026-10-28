@@ -10,7 +10,10 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -50,7 +53,9 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain apiSecurity(HttpSecurity http, ProblemDetailAuthHandler problemHandler) throws Exception {
+    SecurityFilterChain apiSecurity(HttpSecurity http, ProblemDetailAuthHandler problemHandler,
+                                    Environment environment) throws Exception {
+        boolean devProfile = environment.acceptsProfiles(Profiles.of("dev"));
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -64,7 +69,13 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/logout").permitAll()
+                        // Authenticated by HMAC signature inside the controller, not by a user token.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                        // Scraped by Prometheus; restrict at the network level in prod (docs/deployment.md).
+                        .requestMatchers("/actuator/prometheus").permitAll()
+                        .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/dev/**").access((authentication, context) -> new AuthorizationDecision(devProfile))
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(rs -> rs

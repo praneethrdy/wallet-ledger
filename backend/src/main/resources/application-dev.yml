@@ -13,3 +13,9 @@ security:
   auth:
     # DEV ONLY. Generate a real one with:  openssl rand -base64 32
     jwt-secret: ${JWT_SECRET:ZGV2LW9ubHktand0LXNlY3JldC1jaGFuZ2UtbWUtMzJieXRlcyE=}
+
+webhook:
+  payment-provider:
+    # DEV ONLY. scripts/sign-webhook.sh uses the same default.
+    secret: ${WEBHOOK_SECRET:dev-webhook-secret-change-me}
+    previous-secret: ${WEBHOOK_PREVIOUS_SECRET:}

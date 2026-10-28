@@ -52,6 +52,8 @@ public abstract class AbstractIntegrationTest {
                     .withDatabaseName(DB_NAME)
                     .withUsername(SUPERUSER)
                     .withPassword(SUPERUSER_PASSWORD)
+                    // Several Spring test contexts (each with its own pool) share this one container.
+                    .withCommand("postgres", "-c", "max_connections=300")
                     .withEnv("DB_OWNER_USER", OWNER_USER)
                     .withEnv("DB_OWNER_PASSWORD", OWNER_PASSWORD)
                     .withEnv("DB_APP_USER", APP_USER)

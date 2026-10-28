@@ -43,6 +43,12 @@ idempotency:
   stale-after: 60s
   in-flight-wait: 5s
 
+webhook:
+  payment-provider:
+    provider: mockpay
+    tolerance: 5m
+    # secret / previous-secret are set per profile (prod: env WEBHOOK_SECRET / WEBHOOK_PREVIOUS_SECRET only)
+
 security:
   auth:
     # jwt-secret is set per profile (dev default / test fixed / prod from env JWT_SECRET only).

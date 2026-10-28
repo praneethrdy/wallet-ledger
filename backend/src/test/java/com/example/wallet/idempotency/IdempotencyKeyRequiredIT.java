@@ -41,14 +41,23 @@ class IdempotencyKeyRequiredIT extends ApiTest {
         return Stream.of(
                 Arguments.of(Role.CUSTOMER, "/api/v1/wallets", Map.of("name", "x")),
                 Arguments.of(Role.CUSTOMER, "/api/v1/transfers",
-                        Map.of("fromWalletId", any, "toWalletId", any, "amount", 1, "currency", "INR"))
+                        Map.of("fromWalletId", any, "toWalletId", any, "amount", 1, "currency", "INR")),
+                Arguments.of(Role.CUSTOMER, "/api/v1/deposits",
+                        Map.of("walletId", any, "amount", 1, "currency", "INR")),
+                Arguments.of(Role.ADMIN, "/api/v1/admin/transactions/" + any + "/reverse", Map.of("reason", "x")),
+                Arguments.of(Role.ADMIN, "/api/v1/admin/wallets/" + any + "/freeze", null),
+                Arguments.of(Role.ADMIN, "/api/v1/admin/wallets/" + any + "/unfreeze", null)
         );
     }
 
     /** Path templates of the endpoints above, as registered in Spring MVC. */
     static final Set<String> COVERED = Set.of(
             "POST /api/v1/wallets",
-            "POST /api/v1/transfers");
+            "POST /api/v1/transfers",
+            "POST /api/v1/deposits",
+            "POST /api/v1/admin/transactions/{id}/reverse",
+            "POST /api/v1/admin/wallets/{id}/freeze",
+            "POST /api/v1/admin/wallets/{id}/unfreeze");
 
     @ParameterizedTest(name = "{1}")
     @MethodSource("mutatingEndpoints")

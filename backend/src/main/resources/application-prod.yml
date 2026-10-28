@@ -12,3 +12,8 @@ spring:
 security:
   auth:
     jwt-secret: ${JWT_SECRET}
+
+webhook:
+  payment-provider:
+    secret: ${WEBHOOK_SECRET}
+    previous-secret: ${WEBHOOK_PREVIOUS_SECRET:}

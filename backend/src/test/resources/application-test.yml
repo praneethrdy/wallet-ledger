@@ -1,4 +1,11 @@
 # Connection details come from Testcontainers via @DynamicPropertySource (AbstractIntegrationTest).
+spring:
+  datasource:
+    hikari:
+      # Each cached test context holds its own pool against the shared container: keep them small.
+      maximum-pool-size: 10
+      minimum-idle: 1
+
 logging:
   level:
     org.testcontainers: INFO
@@ -14,3 +21,8 @@ app:
 
 idempotency:
   in-flight-wait: 2s   # keeps the "409 after waiting" test fast
+
+webhook:
+  payment-provider:
+    secret: test-webhook-secret
+    previous-secret: test-webhook-secret-old
