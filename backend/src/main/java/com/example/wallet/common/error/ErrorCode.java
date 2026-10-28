@@ -30,9 +30,11 @@ public enum ErrorCode {
     IDEMPOTENCY_KEY_REUSED(HttpStatus.UNPROCESSABLE_ENTITY, "Idempotency-Key reused with a different request"),
     IDEMPOTENCY_REQUEST_IN_PROGRESS(HttpStatus.CONFLICT, "A request with this Idempotency-Key is in progress"),
     ALREADY_REVERSED(HttpStatus.CONFLICT, "Transaction already reversed"),
+    REVERSAL_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY, "Transaction cannot be reversed"),
 
     INVALID_SIGNATURE(HttpStatus.UNAUTHORIZED, "Invalid signature"),
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
+    PAYLOAD_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Request body too large"),
 
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error");
 
@@ -60,6 +62,7 @@ public enum ErrorCode {
             case 403 -> FORBIDDEN;
             case 404 -> NOT_FOUND;
             case 405 -> METHOD_NOT_ALLOWED;
+            case 413 -> PAYLOAD_TOO_LARGE;
             case 415 -> UNSUPPORTED_MEDIA_TYPE;
             case 429 -> RATE_LIMITED;
             default -> status >= 500 ? INTERNAL_ERROR : REQUEST_REJECTED;

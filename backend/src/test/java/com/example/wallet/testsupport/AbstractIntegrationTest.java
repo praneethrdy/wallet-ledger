@@ -78,20 +78,23 @@ public abstract class AbstractIntegrationTest {
     @BeforeEach
     void cleanDatabase() throws SQLException {
         try (Connection conn = superuserConnection(); Statement st = conn.createStatement()) {
+            // accounts and users are emptied with DELETE below, so the system accounts
+            // seeded by V3 survive between tests.
             List<String> tables = new ArrayList<>();
             try (var rs = st.executeQuery("""
                     SELECT tablename FROM pg_tables
-                    WHERE schemaname = 'public' AND tablename <> 'flyway_schema_history'
+                    WHERE schemaname = 'public'
+                      AND tablename NOT IN ('flyway_schema_history', 'accounts', 'users')
                     """)) {
                 while (rs.next()) {
                     tables.add('"' + rs.getString(1) + '"');
                 }
             }
-            if (!tables.isEmpty()) {
-                st.execute("SET session_replication_role = replica");
-                st.execute("TRUNCATE " + String.join(", ", tables) + " RESTART IDENTITY CASCADE");
-                st.execute("SET session_replication_role = origin");
-            }
+            st.execute("SET session_replication_role = replica");
+            st.execute("TRUNCATE " + String.join(", ", tables) + " RESTART IDENTITY");
+            st.execute("DELETE FROM accounts WHERE type <> 'SYSTEM'");
+            st.execute("DELETE FROM users");
+            st.execute("SET session_replication_role = origin");
         }
     }
 

@@ -7,3 +7,10 @@ logging:
 security:
   auth:
     jwt-secret: dGVzdC1vbmx5LWp3dC1zZWNyZXQtMzItYnl0ZXMtbG9uZyE=
+
+app:
+  scheduling:
+    enabled: false   # tests invoke jobs directly
+
+idempotency:
+  in-flight-wait: 2s   # keeps the "409 after waiting" test fast

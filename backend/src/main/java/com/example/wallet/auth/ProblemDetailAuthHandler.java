@@ -1,18 +1,15 @@
 package com.example.wallet.auth;
 
 import java.io.IOException;
-import java.net.URI;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
 import com.example.wallet.common.error.ErrorCode;
-import com.example.wallet.common.web.CorrelationIdFilter;
+import com.example.wallet.common.error.ProblemDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,14 +44,6 @@ public class ProblemDetailAuthHandler implements AuthenticationEntryPoint, Acces
 
     private void write(HttpServletRequest request, HttpServletResponse response,
                        ErrorCode code, String detail) throws IOException {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(code.status(), detail);
-        problem.setTitle(code.title());
-        problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("code", code.name());
-        problem.setProperty("correlationId", CorrelationIdFilter.current());
-
-        response.setStatus(code.status().value());
-        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), problem);
+        ProblemDetails.write(request, response, objectMapper, code, detail);
     }
 }

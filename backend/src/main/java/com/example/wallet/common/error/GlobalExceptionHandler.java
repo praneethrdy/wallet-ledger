@@ -15,6 +15,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -97,6 +99,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ex.getBindingResult().getGlobalErrors()
                 .forEach(ge -> errors.add(new FieldViolation(ge.getObjectName(), ge.getDefaultMessage())));
         return validationFailed(ex, errors, request);
+    }
+
+    /** A missing Idempotency-Key header gets its own code; other missing headers/params are 400s. */
+    @Override
+    protected ResponseEntity<Object> handleServletRequestBindingException(
+            ServletRequestBindingException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        if (ex instanceof MissingRequestHeaderException missing
+                && "Idempotency-Key".equalsIgnoreCase(missing.getHeaderName())) {
+            ProblemDetail body = problem(ErrorCode.IDEMPOTENCY_KEY_REQUIRED,
+                    "Send an Idempotency-Key header (e.g. a fresh UUID) with every mutating request");
+            return handleExceptionInternal(ex, body, headers, ErrorCode.IDEMPOTENCY_KEY_REQUIRED.status(), request);
+        }
+        return super.handleServletRequestBindingException(ex, headers, status, request);
     }
 
     /** Constraints on @RequestParam / @PathVariable / @RequestHeader (Spring 6.1+ method validation). */

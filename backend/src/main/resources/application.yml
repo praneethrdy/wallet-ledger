@@ -32,6 +32,17 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 
+app:
+  reporting-zone: Asia/Kolkata
+  default-currency: INR
+  scheduling:
+    enabled: true
+
+idempotency:
+  ttl: 24h
+  stale-after: 60s
+  in-flight-wait: 5s
+
 security:
   auth:
     # jwt-secret is set per profile (dev default / test fixed / prod from env JWT_SECRET only).

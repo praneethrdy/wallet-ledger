@@ -5,6 +5,9 @@ import java.util.Currency;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import com.example.wallet.common.error.ApiException;
+import com.example.wallet.common.error.ErrorCode;
+
 /**
  * An amount in minor units (paise for INR) plus its ISO-4217 currency.
  *
@@ -31,6 +34,15 @@ public record Money(long amountMinor, String currency) {
 
     public static Money of(long amountMinor, String currency) {
         return new Money(amountMinor, currency);
+    }
+
+    /** For client input: an unknown currency is a 400, not a programming error. */
+    public static Money fromRequest(long amountMinor, String currency) {
+        try {
+            return new Money(amountMinor, currency);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "Unknown currency: " + currency);
+        }
     }
 
     public static Money zero(String currency) {

@@ -26,8 +26,9 @@ class SchemaIT extends AbstractIntegrationTest {
 
     @Test
     void allMigrationsAreApplied() {
+        var all = flyway.info().all();
         assertThat(flyway.info().pending()).isEmpty();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("2");
+        assertThat(flyway.info().current().getVersion()).isEqualTo(all[all.length - 1].getVersion());
     }
 
     @Test
