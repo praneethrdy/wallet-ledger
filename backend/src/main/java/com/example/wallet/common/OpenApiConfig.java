@@ -5,8 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.example.wallet.auth.AuthUser;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -39,6 +43,14 @@ public class OpenApiConfig {
 
     private static final String BEARER = "bearerAuth";
     private static final String PROBLEM = "Problem";
+    static {
+        // AuthUser is resolved from the verified JWT, never sent by the client; without this,
+        // springdoc documents it as a required "caller" query parameter on every endpoint.
+        SpringDocUtils.getConfig().addRequestWrapperToIgnore(AuthUser.class);
+        // Raw provider payloads (webhook events) are arbitrary JSON objects.
+        SpringDocUtils.getConfig().replaceWithClass(JsonNode.class, Object.class);
+    }
+
     private static final List<String> PUBLIC_PREFIXES = List.of("/api/v1/auth/register", "/api/v1/auth/login",
             "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/webhooks/");
 

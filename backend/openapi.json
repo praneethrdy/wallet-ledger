@@ -35,19 +35,6 @@
         },
         "type" : "object"
       },
-      "AuthUser" : {
-        "properties" : {
-          "id" : {
-            "format" : "uuid",
-            "type" : "string"
-          },
-          "role" : {
-            "enum" : [ "CUSTOMER", "SUPPORT", "ADMIN" ],
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
       "BalancePoint" : {
         "properties" : {
           "balance" : {
@@ -270,7 +257,6 @@
         },
         "type" : "object"
       },
-      "JsonNode" : { },
       "LastReconciliation" : {
         "properties" : {
           "finishedAt" : {
@@ -792,9 +778,7 @@
             "format" : "uuid",
             "type" : "string"
           },
-          "payload" : {
-            "$ref" : "#/components/schemas/JsonNode"
-          },
+          "payload" : { },
           "processedAt" : {
             "format" : "date-time",
             "type" : "string"
@@ -911,13 +895,6 @@
           "required" : true,
           "schema" : {
             "type" : "string"
-          }
-        }, {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
           }
         } ],
         "responses" : {
@@ -1201,13 +1178,6 @@
             "format" : "uuid",
             "type" : "string"
           }
-        }, {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
         } ],
         "requestBody" : {
           "content" : {
@@ -1437,13 +1407,6 @@
             "format" : "uuid",
             "type" : "string"
           }
-        }, {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
         } ],
         "responses" : {
           "200" : {
@@ -1559,13 +1522,6 @@
           "schema" : {
             "format" : "uuid",
             "type" : "string"
-          }
-        }, {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
           }
         } ],
         "responses" : {
@@ -1788,14 +1744,6 @@
     "/api/v1/auth/logout-all" : {
       "post" : {
         "operationId" : "logoutAll",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        } ],
         "responses" : {
           "204" : {
             "description" : "No Content"
@@ -1976,14 +1924,6 @@
     "/api/v1/dashboard/summary" : {
       "get" : {
         "operationId" : "summary",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -2060,13 +2000,6 @@
           "required" : true,
           "schema" : {
             "type" : "string"
-          }
-        }, {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
           }
         } ],
         "requestBody" : {
@@ -2169,13 +2102,6 @@
       "get" : {
         "operationId" : "get_2",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "path",
           "name" : "id",
           "required" : true,
@@ -2263,14 +2189,6 @@
     "/api/v1/me" : {
       "get" : {
         "operationId" : "me",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -2340,13 +2258,6 @@
       "get" : {
         "operationId" : "transactions",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "query",
           "name" : "reference",
           "required" : false,
@@ -2475,13 +2386,6 @@
         "operationId" : "users",
         "parameters" : [ {
           "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
-          "in" : "query",
           "name" : "email",
           "required" : false,
           "schema" : {
@@ -2572,13 +2476,6 @@
       "get" : {
         "operationId" : "user",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "path",
           "name" : "id",
           "required" : true,
@@ -2667,13 +2564,6 @@
       "get" : {
         "operationId" : "userWallets",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "path",
           "name" : "id",
           "required" : true,
@@ -2765,13 +2655,6 @@
       "get" : {
         "operationId" : "webhookEvents",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "query",
           "name" : "status",
           "required" : false,
@@ -2867,13 +2750,6 @@
       "get" : {
         "operationId" : "list_1",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "query",
           "name" : "walletId",
           "required" : false,
@@ -3001,13 +2877,6 @@
       "get" : {
         "operationId" : "get_1",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "path",
           "name" : "id",
           "required" : true,
@@ -3102,13 +2971,6 @@
           "required" : true,
           "schema" : {
             "type" : "string"
-          }
-        }, {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
           }
         } ],
         "requestBody" : {
@@ -3210,14 +3072,6 @@
     "/api/v1/wallets" : {
       "get" : {
         "operationId" : "list",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -3295,13 +3149,6 @@
           "required" : true,
           "schema" : {
             "type" : "string"
-          }
-        }, {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
           }
         } ],
         "requestBody" : {
@@ -3404,13 +3251,6 @@
       "get" : {
         "operationId" : "get",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "path",
           "name" : "id",
           "required" : true,
@@ -3499,13 +3339,6 @@
       "get" : {
         "operationId" : "balanceHistory",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "path",
           "name" : "id",
           "required" : true,
@@ -3608,13 +3441,6 @@
       "get" : {
         "operationId" : "entries",
         "parameters" : [ {
-          "in" : "query",
-          "name" : "caller",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/AuthUser"
-          }
-        }, {
           "in" : "path",
           "name" : "id",
           "required" : true,

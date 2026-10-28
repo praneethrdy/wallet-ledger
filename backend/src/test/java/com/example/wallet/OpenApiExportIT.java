@@ -45,6 +45,10 @@ class OpenApiExportIT extends AbstractIntegrationTest {
         JsonNode transferParams = spec.path("paths").path("/api/v1/transfers").path("post").path("parameters");
         assertThat(transferParams.findValuesAsText("name")).contains("Idempotency-Key");
         assertThat(spec.path("paths").path("/api/v1/auth/login").path("post").path("security")).isEmpty();
+        // The caller comes from the JWT; the contract must never ask the client to send it.
+        assertThat(spec.path("paths").findValuesAsText("name")).doesNotContain("caller");
+        assertThat(spec.path("components").path("schemas").has("AuthUser")).isFalse();
+        assertThat(spec.path("components").path("schemas").has("JsonNode")).isFalse();
 
         Object sorted = mapper.convertValue(spec, Map.class);
         String pretty = mapper.writeValueAsString(sorted) + "\n";
