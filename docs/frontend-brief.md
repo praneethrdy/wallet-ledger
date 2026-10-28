@@ -30,7 +30,9 @@ A web app over the existing backend that makes its guarantees **visible**: balan
 | Styling and UI | **Tailwind CSS 4** + **shadcn/ui** (Radix primitives) + lucide icons |
 | Forms | React Hook Form + Zod (client UX), the same Zod schemas re-validated in Server Actions |
 | Server data | Server Components fetch through the BFF client (section 5); **TanStack Query** only where the client must poll or paginate (deposit status, infinite entry lists) |
-| Charts | Recharts (30-day cash flow, balance sparkline) |
+| Charts | Recharts (30-day cash flow, balance sparkline), themed with the section 12 tokens |
+| Motion | `motion` (the package formerly called Framer Motion; import from `motion/react`) |
+| Fonts | Geist Sans + Geist Mono via `next/font` |
 | API types | `openapi-typescript` (7.x), generated from `../backend/openapi.json` into `web/src/lib/api/schema.d.ts`; `openapi-fetch` as the typed client |
 | Session | encrypted, signed HttpOnly cookie (`iron-session`, or `jose` JWE) |
 | Tests | Vitest + Testing Library (units: money, error mapping, forms); **Playwright** end-to-end against the real backend |
@@ -99,8 +101,11 @@ Browser ──(HttpOnly session cookie)──▶ Next.js server ──(Bearer JW
 - **/login**: email + password; generic error ("Invalid email or password"); `?expired=1` banner.
 - **/register**: email + password (min 10 characters, show the rule); on success, sign in.
 
+### Routing of `/`
+`/` is the marketing landing page for logged-out visitors (optional step 11; until it exists, `/` redirects to `/login`). Logged-in users going to `/` are redirected to `/dashboard`.
+
 ### Customer (CUSTOMER; ADMIN sees its own wallets but no money movement)
-- **/** Dashboard (`GET /dashboard/summary`):
+- **/dashboard** (`GET /dashboard/summary`):
   - total balance per currency;
   - this month's inflow and outflow;
   - a 30-day cash-flow bar chart (inflow vs outflow per day);
@@ -154,7 +159,9 @@ Loading skeletons, empty states, error states (with `correlationId`), keyboard a
 web/
   src/app/(public)/login, register
   src/app/(app)/layout.tsx           # authenticated shell, role-aware nav
-  src/app/(app)/page.tsx             # dashboard
+  src/app/page.tsx                   # landing (logged out) / redirect to /dashboard (logged in)
+  src/app/design/page.tsx            # style guide: every token, component and state, light + dark
+  src/app/(app)/dashboard/page.tsx
   src/app/(app)/wallets, transfer, deposit, transactions, settings
   src/app/(app)/admin/..., support/...
   src/lib/api/client.ts schema.d.ts  # server-only typed client + generated types
@@ -194,13 +201,17 @@ web/
 - [ ] The mock provider is reachable only when `MOCK_PROVIDER_ENABLED=true`.
 - [ ] CI: a `.github/workflows/web-ci.yml` job (lint, typecheck, unit tests, build, and the generated-types drift check) on `web/**` changes. Playwright e2e can run in CI by starting Postgres and the backend jar, or stay local-only if that's too slow: document the choice.
 - [ ] `web/README.md` covers setup, env vars (`API_BASE_URL`, `SESSION_SECRET` ≥ 32 chars, `MOCK_PROVIDER_ENABLED`), scripts, and architecture (BFF, refresh single-flight, idempotency). The root README links to it.
-- [ ] Screenshots (dashboard, transfer, deposit flow, admin console) in `docs/screenshots/` for the portfolio.
+- [ ] Screenshots (dashboard, transfer, deposit flow, admin console), in light and dark mode, in `docs/screenshots/` for the portfolio.
+- [ ] The section 12 visual design is applied everywhere: no default shadcn styling left; the `/design` page is approved and kept up to date; motion respects `prefers-reduced-motion`.
 
 ## 10. Build order
 
 Verify each step (build, tests, and a look at the running UI) before the next.
 
-1. Scaffold `web/` (Next 16, TypeScript strict, Tailwind 4, shadcn, ESLint/Prettier), and the codegen script plus generated types.
+1. Scaffold `web/` (Next 16, TypeScript strict, Tailwind 4, shadcn, ESLint/Prettier), and the codegen script plus generated types. **Also:**
+   - build the section 12 design system: colour, radius, shadow and type tokens as CSS variables (light + dark), Geist fonts, and shadcn re-themed so nothing looks default;
+   - build the **`/design` style-guide page**, showing every token, component and state (hover, focus-visible, disabled, loading, skeleton, empty, error) in light and dark mode;
+   - **STOP. Show the user `/design` (screenshots in both modes) and wait for approval before building any screen.**
 2. `money.ts` and `errors.ts`, with unit tests.
 3. Session, BFF client, single-flight refresh; login, logout and register; middleware; the authenticated shell with role-aware navigation.
 4. Dashboard; wallets list and create; wallet detail with infinite entries and sparkline.
@@ -210,7 +221,74 @@ Verify each step (build, tests, and a look at the running UI) before the next.
 8. Staff console: admin overview, wallet search and freeze, reversal, reconciliation, support pages.
 9. Polish: empty, loading and error states, dark mode, responsive pass, accessibility.
 10. Playwright e2e suite, web CI workflow, `web/README.md`, screenshots.
+11. *(Optional, last.)* Marketing landing page at `/` for logged-out visitors (section 12).
 
 ## 11. Kickoff prompt for the new session
 
-> Read `docs/frontend-brief.md` and follow it exactly. It is the spec for the `web/` frontend of this repo. Also read `README.md` and `backend/openapi.json`. Build in the order of section 10, verifying each step before the next. Don't modify `backend/` unless the brief allows it. Never add Claude attribution to commits. Start with step 1, and first confirm the Node.js version is ≥ 20.9.
+> Read `docs/frontend-brief.md` and follow it exactly. It is the spec for the `web/` frontend of this repo, including the section 12 visual design. Also read `README.md` and `backend/openapi.json`. Build in the order of section 10, verifying each step before the next. Don't modify `backend/` unless the brief allows it. Never add Claude attribution to commits. First confirm the Node.js version is ≥ 20.9, then do step 1, and stop after the `/design` style guide for my approval.
+
+## 12. Visual design (premium SaaS aesthetic: required, not optional polish)
+
+**Goal:** it should feel like a top-tier fintech product: calm, precise, trustworthy. No generic template look, and no untouched default shadcn styling.
+
+### Aesthetic
+- Generous whitespace, crisp typography, restrained colour.
+- Depth comes from 1px hairline borders and soft multi-layer low-opacity shadows, not heavy fills.
+- A subtle dot/grid pattern and a soft radial glow on the auth pages.
+- A translucent blurred top bar in the app shell.
+
+### Typography
+- **Geist Sans** for the UI and **Geist Mono** for money, IDs, references and JSON, via `next/font`.
+- All numbers use `tabular-nums` and are **right-aligned** in tables.
+- Labels are small, uppercase and wide-tracked.
+
+### Colour tokens
+Defined as CSS variables, with dark mode first-class.
+
+| Token | Light | Dark |
+|---|---|---|
+| background | `#FAFAFA` | `#09090B` |
+| surface | `#FFFFFF` | `#111113` |
+| muted | `#F4F4F5` | `#18181B` |
+| border | `#E4E4E7` | `#27272A` |
+| text | `#09090B` | `#FAFAFA` |
+| muted text | `#71717A` | `#A1A1AA` |
+| accent (indigo-violet) | `#5B5BD6` | `#7C7CF0` |
+
+- **Accent, used sparingly:** primary buttons, the focus ring, the active nav item, and the key chart line.
+- **Credit / success:** emerald `#10B981`.
+- **Debit:** the default text colour with a "−" sign. Outgoing money is not an error; **red is reserved for real errors** (rose `#F43F5E`).
+- **Warning:** amber `#F59E0B`.
+- **Badges:** a 10% tinted background with solid text.
+
+### Shape and layout
+- Radius: cards **14px**, inputs and buttons **10px**.
+- A 4px spacing grid; max content width **1280px**.
+
+### Motion
+Using `motion` (formerly Framer Motion), subtle:
+- 150–220ms ease-out;
+- content fades in and rises 4px on mount;
+- balances count up when they change;
+- respect `prefers-reduced-motion`.
+
+### Signature screens
+- **Transfer review step:** a double-entry preview card ("Your wallet −₹500.00 DEBIT / Recipient +₹500.00 CREDIT / Net ₹0.00 ✓ Balanced").
+- **Transaction detail:** a T-account panel (Debits | Credits columns, a totals row, a "Balanced ✓" badge).
+- **Login/register:** split screen, with the form on the left and, on desktop only, a brand panel on the right with a glow and a floating sample balance card.
+- **Demo accounts panel** on `/login`, dev only: one-click fill for the seeded alice, bob, support and admin users. Hidden unless `MOCK_PROVIDER_ENABLED=true`.
+
+### States
+- Every component has hover, focus-visible (a 2px accent ring), disabled and loading states.
+- Every data view has designed skeleton, empty and error states.
+
+### Content rule
+Use no real company names or logos anywhere.
+
+### Optional landing page (step 11, last)
+A marketing page at `/` for logged-out visitors:
+- a hero;
+- a live-looking product preview built from real components;
+- a 6-feature grid;
+- a "how money moves" debit/credit diagram;
+- a `curl` example showing the `Idempotency-Key` header.
