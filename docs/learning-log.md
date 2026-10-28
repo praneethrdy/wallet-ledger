@@ -27,4 +27,26 @@ Concepts learned at each step, in my own words where possible.
 - Row-level UPDATE/DELETE triggers don't fire on `TRUNCATE`. It needs its own statement-level trigger, or a REVOKE.
 - A foreign key from an append-only table to a table with a TTL cleanup can't work. Every `ON DELETE` option either blocks the cleanup, updates the append-only row, or deletes it (ADR-004).
 
-_Interview Q&A for this step: to be filled in after review._
+_Interview Q&A: skipped for now; answer later. The break-it exercise on the deferred trigger is also pending._
+
+---
+
+## Phase 1 · Step 2: Errors, correlation ID, Money, Clock
+
+**RFC 7807 ProblemDetail.** A standard JSON shape for errors (`type`, `title`, `status`, `detail`, `instance`) that can be extended with custom fields. We add a stable `code`, because clients should switch on `code`, never parse `detail`. One `@RestControllerAdvice` maps every exception, so no controller formats errors itself.
+
+**400 vs 409 vs 422.** 400 means the request is broken. 422 means it's understood but refused by a business rule. 409 means it clashes with the current state of the resource.
+
+**Never leak internals.** Only exceptions we chose to make public (`ApiException`) show their message. Everything else is logged server-side and the client gets a generic 500 with a correlation ID. Even framework messages can leak, e.g. Jackson errors that name Java classes.
+
+**Correlation ID + MDC.** MDC is a per-thread map that the logger prints on every line. Put the request ID there in a filter and every log line for that request is greppable by one ID. Clear it in `finally`, because threads are reused across requests. Validate client-supplied IDs to avoid log injection (CR/LF).
+
+**Money as a value object.** `long` minor units plus a currency. `Math.addExact` throws on overflow instead of wrapping (`Long.MAX_VALUE + 1` becomes negative!). Arithmetic across currencies is refused. Whether a value may be negative is a business rule, not a property of Money.
+
+**Injected Clock.** `Instant.now()` makes time-based logic untestable. Inject a `Clock` and tests can freeze or advance time.
+
+**UUID v7.** Time-ordered UUIDs append to the right edge of the B-tree index (fast inserts, natural ordering), while 74 random bits keep them unguessable.
+
+**Test slices.** `@WebMvcTest` starts only the web layer (controllers, advice, filters, Jackson), so there's no DB or Docker and it's fast. Use it for HTTP-contract tests; use `@SpringBootTest` + Testcontainers when the DB matters.
+
+_Interview Q&A for this step: pending._

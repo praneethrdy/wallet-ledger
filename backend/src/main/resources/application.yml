@@ -32,6 +32,19 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 
+server:
+  # Boot's fallback /error page (used for errors outside MVC, e.g. in filters) must not leak internals.
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    include-exception: false
+
+logging:
+  pattern:
+    # Every log line carries the request's correlation ID (set by CorrelationIdFilter).
+    level: "%5p [%X{correlationId:-}]"
+
 management:
   endpoints:
     web:

@@ -2,7 +2,7 @@
 
 Short records of decisions that are non-obvious or that deviate from the spec. Format: context → decision → consequences.
 
-ADRs still to be written as their steps land: derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design (Step 7), 404 vs 403 for foreign resources (Step 4), no Redis (Step 7), CSRF stance (Step 3).
+ADRs still to be written as their steps land: CSRF stance (Step 3), 404 vs 403 for foreign resources (Step 4), derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design and no Redis (Step 7).
 
 ---
 
@@ -79,3 +79,36 @@ The ON DELETE options for that FK all fail:
 - **Migration order.** V1 holds the core tables, V2 holds the ledger (transactions, ledger_entries and triggers). The `deposits` table is added in Step 8 because it references `transactions`.
 - **`reconciliation_runs.trigger_type`** instead of the spec's `trigger`, to avoid quoting a SQL keyword.
 - **`audit_log.actor_user_id`** has no FK, so audit writes never fail on an unknown or anonymous actor (e.g. failed logins).
+
+---
+
+## ADR-006: Error model (RFC 7807 ProblemDetail with stable codes)
+
+**Status:** Accepted (Step 2)
+
+**Context.** Clients, including the future Next.js BFF, need to react to errors by type, such as showing "insufficient funds" next to the amount field. Human-readable messages change over time, so they can't be parsed. And error bodies must never leak stack traces, SQL or Java class names.
+
+**Decision.**
+- Every error is an `application/problem+json` body with the standard fields (`type`, `title`, `status`, `detail`, `instance`), plus:
+  - `code`: a stable value from the `ErrorCode` enum. **This is the contract.**
+  - `correlationId`: the request's `X-Request-Id`.
+  - `errors[]`: `{field, message}` pairs for validation failures.
+- Status semantics:
+  - **400:** the request is malformed (bad JSON, failed validation, missing header).
+  - **422:** the request is well-formed, but a business rule refuses it (`INSUFFICIENT_FUNDS`, `WALLET_FROZEN`, `CURRENCY_MISMATCH`, `SAME_WALLET_TRANSFER`, `IDEMPOTENCY_KEY_REUSED`).
+  - **409:** the request conflicts with the current state (`ALREADY_REVERSED`, `IDEMPOTENCY_REQUEST_IN_PROGRESS`).
+- Codes added beyond the spec, for Spring's own errors and for bugs: `METHOD_NOT_ALLOWED`, `UNSUPPORTED_MEDIA_TYPE`, `REQUEST_REJECTED` and `INTERNAL_ERROR`.
+- Only `ApiException` messages reach the client. Any other exception is logged in full and returned as a generic 500. Jackson parse errors are reduced to the JSON path of the bad field, because their raw messages contain Java type names.
+- Boot's fallback `/error` page is set to never include messages, exceptions or stack traces.
+
+**Consequences.** Adding a new error means adding an enum value. The OpenAPI spec (Step 7 checkpoint) will document `ProblemDetail` once and reuse it.
+
+---
+
+## ADR-007: Correlation ID
+
+**Status:** Accepted (Step 2)
+
+**Decision.** `CorrelationIdFilter` runs first in the filter chain. It reuses the client's `X-Request-Id` only if the value matches `^[A-Za-z0-9._-]{1,64}$`, and otherwise generates a UUID. The ID goes into the logging context (MDC, as `correlationId`), into every log line, into the response header and into error bodies. It is removed from the MDC in a `finally` block, because servlet threads are pooled.
+
+**Why the check.** A client-supplied value containing CR/LF could forge log lines or inject response headers. An unbounded value bloats every log line.
