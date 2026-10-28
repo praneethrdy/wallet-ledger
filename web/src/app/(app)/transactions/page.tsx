@@ -7,8 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api, get } from "@/lib/api/client";
 import { parseTxFilters, txApiQuery, txFiltersQuery } from "@/lib/tx-filters";
 
-import { TransactionFilters } from "./filters";
-import { TransactionList } from "./transaction-list";
+import { TransactionFilters } from "@/components/ledger/transaction-filters";
+import { TransactionList } from "@/components/ledger/transaction-list";
 
 export const metadata: Metadata = { title: "Transactions" };
 

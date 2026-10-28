@@ -1,6 +1,7 @@
 import { CheckIcon, TriangleAlertIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { shortId } from "@/lib/format";
 import { formatMoney } from "@/lib/money";
 
 export type TLeg = {
@@ -14,9 +15,10 @@ export type TLeg = {
 
 /**
  * Transaction detail as a classic T-account: debits on the left, credits on the right, totals
- * per currency, and a "Balanced" badge computed from the legs (not assumed).
+ * per currency, and a "Balanced" badge computed from the legs (not assumed). `showIds` adds each
+ * account's short ID under its name (staff views, where two wallets can share a name).
  */
-export function TAccount({ legs }: { legs: TLeg[] }) {
+export function TAccount({ legs, showIds = false }: { legs: TLeg[]; showIds?: boolean }) {
   const debits = legs.filter((l) => l.direction === "DEBIT");
   const credits = legs.filter((l) => l.direction === "CREDIT");
   const currencies = [...new Set(legs.map((l) => l.currency))];
@@ -34,8 +36,8 @@ export function TAccount({ legs }: { legs: TLeg[] }) {
         <div className="border-l border-border px-5 py-3 text-right eyebrow">Credits</div>
       </div>
       <div className="grid grid-cols-2">
-        <Column legs={debits} />
-        <Column legs={credits} credit className="border-l border-border" />
+        <Column legs={debits} showIds={showIds} />
+        <Column legs={credits} credit showIds={showIds} className="border-l border-border" />
       </div>
       {totals.map((t) => (
         <div key={t.currency} className="grid grid-cols-2 border-t-2 border-double border-border bg-muted/50">
@@ -63,12 +65,25 @@ export function TAccount({ legs }: { legs: TLeg[] }) {
   );
 }
 
-function Column({ legs, credit = false, className = "" }: { legs: TLeg[]; credit?: boolean; className?: string }) {
+function Column({
+  legs,
+  credit = false,
+  showIds = false,
+  className = "",
+}: {
+  legs: TLeg[];
+  credit?: boolean;
+  showIds?: boolean;
+  className?: string;
+}) {
   return (
     <ul className={`divide-y divide-border/70 ${className}`}>
       {legs.map((leg, i) => (
         <li key={`${leg.accountId ?? leg.accountName}-${i}`} className={`px-5 py-3 ${credit ? "text-right" : ""}`}>
           <div className="truncate text-sm">{leg.accountName}</div>
+          {showIds && leg.accountId && (
+            <div className="num text-xs text-muted-foreground">{shortId(leg.accountId)}</div>
+          )}
           <div className={`num text-sm ${credit ? "text-credit-text" : ""}`}>
             {formatMoney(leg.amount, leg.currency)}
           </div>

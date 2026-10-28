@@ -52,7 +52,10 @@ export function TransactionRow({ tx, href }: { tx: Summary; href: string }) {
         </span>
       </span>
       <span className="text-right">
-        {net === 0 && tx.netAmount !== null ? (
+        {tx.netAmount === null ? (
+          // Staff view with no wallet in focus: there's no "in" or "out", just the size.
+          <Amount minor={tx.amount} currency={tx.currency} tone="plain" className="text-sm font-medium" />
+        ) : net === 0 ? (
           <span className="text-sm text-muted-foreground">Between your wallets</span>
         ) : (
           <Amount minor={net} currency={tx.currency} tone="signed" className="text-sm font-medium" />

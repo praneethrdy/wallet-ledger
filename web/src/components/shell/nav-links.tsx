@@ -13,11 +13,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 
 import type { NavItem } from "./nav-items";
 
-function isActive(pathname: string, href: string, all: NavItem[]) {
-  if (pathname === href) return true;
-  if (!pathname.startsWith(`${href}/`)) return false;
-  // "/admin" must not light up on "/admin/wallets" when that has its own item.
-  return !all.some((other) => other.href !== href && other.href.startsWith(href) && pathname.startsWith(other.href));
+/** Length of the longest prefix of this item that matches the path, or -1. */
+function matchLength(pathname: string, item: NavItem): number {
+  const prefixes = [item.href, ...(item.also ?? [])];
+  return Math.max(-1, ...prefixes.filter((p) => pathname === p || pathname.startsWith(`${p}/`)).map((p) => p.length));
+}
+
+/** The item with the most specific match wins: "/admin" must not light up on "/admin/wallets". */
+function isActive(pathname: string, item: NavItem, all: NavItem[]) {
+  const mine = matchLength(pathname, item);
+  return mine >= 0 && all.every((other) => other === item || matchLength(pathname, other) < mine);
 }
 
 /** Desktop: inline links. Mobile: a menu button opening a sheet. Active item uses the accent. */
@@ -29,7 +34,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
     <>
       <nav aria-label="Main" className="hidden items-center gap-0.5 md:flex">
         {items.map((item) => {
-          const active = isActive(pathname, item.href, items);
+          const active = isActive(pathname, item, items);
           return (
             <Link
               key={item.href}
@@ -62,7 +67,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
           </SheetHeader>
           <nav aria-label="Main" className="grid gap-1 px-4">
             {items.map((item) => {
-              const active = isActive(pathname, item.href, items);
+              const active = isActive(pathname, item, items);
               return (
                 <Link
                   key={item.href}

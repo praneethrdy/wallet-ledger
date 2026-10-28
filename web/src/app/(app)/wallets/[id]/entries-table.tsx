@@ -33,6 +33,7 @@ export function EntriesTable({ walletId, firstPage }: { walletId: string; firstP
     getNextPageParam: (last) => last.nextCursor,
     initialData: { pages: [firstPage], pageParams: [null] },
     staleTime: Infinity, // the server render is fresh; later pages are loaded on demand
+    gcTime: 0, // ...and on the next visit the server renders a fresh first page, so drop this cache on unmount
   });
 
   const sentinel = useRef<HTMLDivElement>(null);

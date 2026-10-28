@@ -1,6 +1,7 @@
 import type { SessionUser } from "@/lib/session/data";
 
-export type NavItem = { href: string; label: string };
+/** `also`: other path prefixes that belong to this item (e.g. a page reached from it). */
+export type NavItem = { href: string; label: string; also?: string[] };
 
 /** What each role sees in the top bar. Hiding is UX only; the backend enforces access. */
 export function navFor(role: SessionUser["role"]): NavItem[] {
@@ -18,7 +19,7 @@ export function navFor(role: SessionUser["role"]): NavItem[] {
         { href: "/admin", label: "Overview" },
         { href: "/admin/wallets", label: "Wallets" },
         { href: "/support/users", label: "Users" },
-        { href: "/support/transactions", label: "Transactions" },
+        { href: "/support/transactions", label: "Transactions", also: ["/admin/transactions"] },
         { href: "/support/webhook-events", label: "Webhooks" },
         { href: "/admin/reconciliation", label: "Reconciliation" },
       ];

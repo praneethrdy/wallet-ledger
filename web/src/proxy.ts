@@ -19,6 +19,7 @@ const PUBLIC_PAGES = ["/login", "/register", "/design"];
 
 /** Area prefix -> roles allowed to open it. The backend still enforces everything. */
 const AREAS: { prefix: string; roles: SessionUser["role"][] }[] = [
+  { prefix: "/admin/reconciliation", roles: ["SUPPORT", "ADMIN"] }, // read-only for SUPPORT; "Run now" is ADMIN
   { prefix: "/admin", roles: ["ADMIN"] },
   { prefix: "/support", roles: ["SUPPORT", "ADMIN"] },
   { prefix: "/dashboard", roles: ["CUSTOMER", "ADMIN"] },
