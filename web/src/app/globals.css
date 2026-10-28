@@ -1,0 +1,296 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Dark mode is a class on <html> (next-themes). `.light` lets the style guide force a light
+   panel inside a dark page and vice versa. */
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================================
+   Design tokens (docs/frontend-brief.md section 12).
+   Brand tokens are plain hex; shadcn's semantic tokens are mapped onto them below, so every
+   component (ours and shadcn's) draws from one palette.
+   ========================================================================================== */
+
+:root,
+.light {
+  color-scheme: light;
+
+  /* brand palette */
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5; /* "muted" */
+  --line: #e4e4e7; /* hairline border */
+  --line-strong: #d4d4d8;
+  --text: #09090b;
+  --text-muted: #71717a;
+  --brand: #5b5bd6;
+  --brand-hover: #4f4fc4;
+  --brand-contrast: #ffffff;
+  --credit: #10b981;
+  --credit-text: #047857; /* emerald for text on light surfaces (AA contrast) */
+  --danger: #f43f5e;
+  --danger-text: #be123c;
+  --warning: #f59e0b;
+  --warning-text: #b45309;
+
+  /* elevation: hairline + soft, layered, low-opacity shadows */
+  --elev-xs: 0 1px 2px rgb(9 9 11 / 0.04);
+  --elev-sm: 0 1px 2px rgb(9 9 11 / 0.04), 0 1px 4px -1px rgb(9 9 11 / 0.04);
+  --elev-md: 0 1px 2px rgb(9 9 11 / 0.04), 0 4px 8px -2px rgb(9 9 11 / 0.05), 0 12px 24px -8px rgb(9 9 11 / 0.06);
+  --elev-lg: 0 2px 4px rgb(9 9 11 / 0.04), 0 12px 24px -6px rgb(9 9 11 / 0.08), 0 32px 64px -16px rgb(9 9 11 / 0.12);
+  --glow: rgb(91 91 214 / 0.18);
+
+  /* shadcn semantic tokens */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-contrast);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-2); /* shadcn uses "accent" for hover fills, not the brand colour */
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand);
+  --chart-1: var(--brand);
+  --chart-2: var(--credit);
+  --chart-3: #a1a1aa;
+  --chart-4: var(--warning);
+  --chart-5: var(--danger);
+  --radius: 10px; /* inputs + buttons; cards use rounded-xl = 14px */
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg: #09090b;
+  --surface: #111113;
+  --surface-2: #18181b;
+  --line: #27272a;
+  --line-strong: #3f3f46;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --brand: #7c7cf0;
+  --brand-hover: #8e8ef3;
+  --brand-contrast: #ffffff;
+  --credit: #10b981;
+  --credit-text: #34d399;
+  --danger: #f43f5e;
+  --danger-text: #fb7185;
+  --warning: #f59e0b;
+  --warning-text: #fbbf24;
+
+  /* in the dark, depth comes from a faint top highlight plus deeper shadow */
+  --elev-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-sm: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 3px rgb(0 0 0 / 0.5);
+  --elev-md:
+    inset 0 1px 0 rgb(255 255 255 / 0.04), 0 4px 12px -2px rgb(0 0 0 / 0.5), 0 16px 32px -12px rgb(0 0 0 / 0.6);
+  --elev-lg:
+    inset 0 1px 0 rgb(255 255 255 / 0.05), 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 40px 80px -24px rgb(0 0 0 / 0.7);
+  --glow: rgb(124 124 240 / 0.22);
+
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-contrast);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand);
+  --chart-1: var(--brand);
+  --chart-2: var(--credit);
+  --chart-3: #52525b;
+  --chart-4: var(--warning);
+  --chart-5: var(--danger);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* brand-level colours, usable as bg-brand, text-credit, border-line-strong, … */
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-credit: var(--credit);
+  --color-credit-text: var(--credit-text);
+  --color-danger: var(--danger);
+  --color-danger-text: var(--danger-text);
+  --color-warning: var(--warning);
+  --color-warning-text: var(--warning-text);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius); /* 10px: inputs, buttons */
+  --radius-xl: calc(var(--radius) * 1.4); /* 14px: cards, dialogs */
+  --radius-2xl: calc(var(--radius) * 1.8);
+
+  /* Tailwind's shadow scale now means our layered elevations */
+  --shadow-xs: var(--elev-xs);
+  --shadow-sm: var(--elev-sm);
+  --shadow-md: var(--elev-md);
+  --shadow-lg: var(--elev-lg);
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 22%, transparent);
+  }
+}
+
+/* ==========================================================================================
+   Utilities used across the app
+   ========================================================================================== */
+
+/* Money, IDs, references: Geist Mono, tabular figures so columns of numbers line up. */
+@utility num {
+  /* The font variable directly: @theme inline doesn't emit --font-mono at runtime. */
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "zero";
+  letter-spacing: -0.01em;
+}
+
+/* Small, uppercase, wide-tracked labels ("eyebrows"). */
+@utility eyebrow {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Hairline card: 1px border + soft layered shadow, no heavy fill. */
+@utility surface {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--elev-sm);
+  border-radius: calc(var(--radius) * 1.4);
+}
+
+/* Auth / marketing backdrops */
+@utility bg-dots {
+  background-image: radial-gradient(color-mix(in oklab, var(--text) 9%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+@utility bg-grid {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--text) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--text) 6%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+@utility glow {
+  background: radial-gradient(ellipse at center, var(--glow), transparent 65%);
+}
+
+/* Translucent, blurred top bar. */
+@utility glass {
+  background: color-mix(in oklab, var(--bg) 72%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid color-mix(in oklab, var(--line) 80%, transparent);
+}
+
+/* Skeleton shimmer */
+@utility shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    color-mix(in oklab, var(--surface-2) 55%, var(--surface)) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* The 2px accent focus ring, for custom focusable elements (and the style guide's demos). */
+@utility focus-ring {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

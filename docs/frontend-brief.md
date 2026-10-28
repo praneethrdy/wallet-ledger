@@ -92,7 +92,7 @@ Browser ──(HttpOnly session cookie)──▶ Next.js server ──(Bearer JW
   - After a successful submit, a fresh form gets a fresh key.
   - Surface `Idempotent-Replayed: true` quietly ("Already submitted, showing the original result").
 - **Logout:** call `POST /auth/logout` with the refresh token, then destroy the cookie. "Log out everywhere" calls `/auth/logout-all`.
-- **Route protection:** `middleware.ts` redirects unauthenticated users to `/login`. Role checks happen in server layouts (`/admin/**` needs ADMIN, `/support/**` needs SUPPORT or ADMIN); the backend remains the real authority.
+- **Route protection:** `proxy.ts` (Next.js 16 renamed `middleware.ts` to `proxy.ts`) redirects unauthenticated users to `/login`. Role checks happen in server layouts (`/admin/**` needs ADMIN, `/support/**` needs SUPPORT or ADMIN); the backend remains the real authority.
 - **Security headers:** a CSP without `unsafe-inline` scripts where possible, `X-Frame-Options: DENY` (or `frame-ancestors 'none'`), `Referrer-Policy`, `X-Content-Type-Options`. No secrets in `NEXT_PUBLIC_*`.
 
 ## 6. Screens
