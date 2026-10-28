@@ -56,3 +56,10 @@ export function isUuid(value: string): boolean {
 export function shortId(id: string): string {
   return id.length > 14 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
 }
+
+const isoDay = new Intl.DateTimeFormat("en-CA", { timeZone: ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** The IST calendar day of an instant, as "2026-10-28" (for grouping by day). */
+export function istDay(iso: string): string {
+  return isoDay.format(new Date(iso));
+}

@@ -16,6 +16,7 @@ const STYLES: Record<string, { variant: Variant; label: string; dot?: boolean }>
   DEPOSIT: { variant: "success", label: "Deposit" },
   TRANSFER: { variant: "neutral", label: "Transfer" },
   REVERSAL: { variant: "brand", label: "Reversal" },
+  REVERSED: { variant: "brand", label: "Reversed" },
   REFUND: { variant: "neutral", label: "Refund" },
   FX_CONVERSION: { variant: "neutral", label: "FX" },
   // reconciliation

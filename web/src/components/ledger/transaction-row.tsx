@@ -10,7 +10,7 @@ import { formatDateTime } from "@/lib/format";
 
 type Summary = Schemas["TransactionSummary"];
 
-const TYPE_LABEL: Record<string, string> = {
+export const TX_TYPE_LABEL: Record<string, string> = {
   DEPOSIT: "Deposit",
   TRANSFER: "Transfer",
   REVERSAL: "Reversal",
@@ -42,11 +42,11 @@ export function TransactionRow({ tx, href }: { tx: Summary; href: string }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium">{tx.description || TYPE_LABEL[tx.type] || tx.type}</span>
-          {tx.reversedByTransactionId && <StatusBadge value="REVERSAL" className="h-5 text-[11px]" />}
+          <span className="truncate text-sm font-medium">{tx.description || TX_TYPE_LABEL[tx.type] || tx.type}</span>
+          {tx.reversedByTransactionId && <StatusBadge value="REVERSED" className="h-5 text-[11px]" />}
         </span>
         <span className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{formatDateTime(tx.createdAt)}</span>
+          <span className="whitespace-nowrap">{formatDateTime(tx.createdAt)}</span>
           <span aria-hidden>·</span>
           <span className="truncate num">{tx.reference}</span>
         </span>
