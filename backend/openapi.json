@@ -33,6 +33,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "balance", "createdAt", "currency", "id", "name", "ownerEmail", "ownerUserId", "status" ],
         "type" : "object"
       },
       "BalancePoint" : {
@@ -46,6 +47,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "balance", "date" ],
         "type" : "object"
       },
       "CreateDepositRequest" : {
@@ -91,6 +93,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "amount", "currency" ],
         "type" : "object"
       },
       "CurrencyTotal" : {
@@ -103,6 +106,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "balance", "currency" ],
         "type" : "object"
       },
       "DailyFlow" : {
@@ -120,6 +124,7 @@
             "type" : "integer"
           }
         },
+        "required" : [ "date", "inflow", "outflow" ],
         "type" : "object"
       },
       "DashboardSummary" : {
@@ -146,6 +151,7 @@
             "type" : "array"
           }
         },
+        "required" : [ "cashFlow30d", "recentTransactions", "thisMonth", "totals" ],
         "type" : "object"
       },
       "DepositResponse" : {
@@ -174,6 +180,7 @@
           },
           "transactionId" : {
             "format" : "uuid",
+            "nullable" : true,
             "type" : "string"
           },
           "updatedAt" : {
@@ -185,6 +192,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "amount", "createdAt", "currency", "id", "providerReference", "status", "transactionId", "updatedAt", "walletId" ],
         "type" : "object"
       },
       "EntryResponse" : {
@@ -201,6 +209,7 @@
             "type" : "string"
           },
           "description" : {
+            "nullable" : true,
             "type" : "string"
           },
           "direction" : {
@@ -223,6 +232,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "amount", "createdAt", "currency", "description", "direction", "reference", "runningBalance", "transactionId", "type" ],
         "type" : "object"
       },
       "Finding" : {
@@ -231,7 +241,9 @@
             "type" : "string"
           },
           "details" : {
-            "additionalProperties" : { },
+            "additionalProperties" : {
+              "type" : "object"
+            },
             "type" : "object"
           },
           "severity" : {
@@ -239,6 +251,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "check", "details", "severity" ],
         "type" : "object"
       },
       "Flow" : {
@@ -255,12 +268,15 @@
             "type" : "integer"
           }
         },
+        "required" : [ "currency", "inflow", "outflow" ],
         "type" : "object"
       },
       "LastReconciliation" : {
+        "nullable" : true,
         "properties" : {
           "finishedAt" : {
             "format" : "date-time",
+            "nullable" : true,
             "type" : "string"
           },
           "id" : {
@@ -275,6 +291,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "finishedAt", "id", "startedAt", "status" ],
         "type" : "object"
       },
       "LegView" : {
@@ -302,6 +319,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "accountId", "accountName", "accountType", "amount", "currency", "direction" ],
         "type" : "object"
       },
       "LoginRequest" : {
@@ -327,7 +345,10 @@
             "type" : "integer"
           },
           "lastReconciliation" : {
-            "$ref" : "#/components/schemas/LastReconciliation"
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LastReconciliation"
+            } ],
+            "nullable" : true
           },
           "transfersToday" : {
             "format" : "int64",
@@ -340,6 +361,7 @@
             "type" : "array"
           }
         },
+        "required" : [ "failedWebhooks24h", "lastReconciliation", "transfersToday", "volumeToday" ],
         "type" : "object"
       },
       "PageResponseAdminWalletView" : {
@@ -351,9 +373,11 @@
             "type" : "array"
           },
           "nextCursor" : {
+            "nullable" : true,
             "type" : "string"
           }
         },
+        "required" : [ "items", "nextCursor" ],
         "type" : "object"
       },
       "PageResponseEntryResponse" : {
@@ -365,9 +389,11 @@
             "type" : "array"
           },
           "nextCursor" : {
+            "nullable" : true,
             "type" : "string"
           }
         },
+        "required" : [ "items", "nextCursor" ],
         "type" : "object"
       },
       "PageResponseRunResponse" : {
@@ -379,9 +405,11 @@
             "type" : "array"
           },
           "nextCursor" : {
+            "nullable" : true,
             "type" : "string"
           }
         },
+        "required" : [ "items", "nextCursor" ],
         "type" : "object"
       },
       "PageResponseTransactionSummary" : {
@@ -393,9 +421,11 @@
             "type" : "array"
           },
           "nextCursor" : {
+            "nullable" : true,
             "type" : "string"
           }
         },
+        "required" : [ "items", "nextCursor" ],
         "type" : "object"
       },
       "PageResponseWebhookEventView" : {
@@ -407,9 +437,11 @@
             "type" : "array"
           },
           "nextCursor" : {
+            "nullable" : true,
             "type" : "string"
           }
         },
+        "required" : [ "items", "nextCursor" ],
         "type" : "object"
       },
       "Problem" : {
@@ -506,6 +538,7 @@
         "properties" : {
           "checkedTransactions" : {
             "format" : "int64",
+            "nullable" : true,
             "type" : "integer"
           },
           "findings" : {
@@ -516,6 +549,7 @@
           },
           "finishedAt" : {
             "format" : "date-time",
+            "nullable" : true,
             "type" : "string"
           },
           "id" : {
@@ -531,10 +565,12 @@
           },
           "totalCredits" : {
             "format" : "int64",
+            "nullable" : true,
             "type" : "integer"
           },
           "totalDebits" : {
             "format" : "int64",
+            "nullable" : true,
             "type" : "integer"
           },
           "trigger" : {
@@ -542,6 +578,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "checkedTransactions", "findings", "finishedAt", "id", "startedAt", "status", "totalCredits", "totalDebits", "trigger" ],
         "type" : "object"
       },
       "SupportUserView" : {
@@ -566,6 +603,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "createdAt", "email", "id", "role", "status" ],
         "type" : "object"
       },
       "SupportWalletView" : {
@@ -593,6 +631,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "balance", "createdAt", "currency", "id", "name", "status" ],
         "type" : "object"
       },
       "TokenResponse" : {
@@ -611,6 +650,7 @@
             "$ref" : "#/components/schemas/UserResponse"
           }
         },
+        "required" : [ "accessToken", "expiresIn", "refreshToken", "user" ],
         "type" : "object"
       },
       "TransactionDetail" : {
@@ -620,6 +660,7 @@
             "type" : "string"
           },
           "description" : {
+            "nullable" : true,
             "type" : "string"
           },
           "id" : {
@@ -637,10 +678,12 @@
           },
           "reversalOfTransactionId" : {
             "format" : "uuid",
+            "nullable" : true,
             "type" : "string"
           },
           "reversedByTransactionId" : {
             "format" : "uuid",
+            "nullable" : true,
             "type" : "string"
           },
           "type" : {
@@ -648,6 +691,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "createdAt", "description", "id", "legs", "reference", "reversalOfTransactionId", "reversedByTransactionId", "type" ],
         "type" : "object"
       },
       "TransactionSummary" : {
@@ -664,6 +708,7 @@
             "type" : "string"
           },
           "description" : {
+            "nullable" : true,
             "type" : "string"
           },
           "id" : {
@@ -672,6 +717,7 @@
           },
           "netAmount" : {
             "format" : "int64",
+            "nullable" : true,
             "type" : "integer"
           },
           "reference" : {
@@ -679,10 +725,12 @@
           },
           "reversalOfTransactionId" : {
             "format" : "uuid",
+            "nullable" : true,
             "type" : "string"
           },
           "reversedByTransactionId" : {
             "format" : "uuid",
+            "nullable" : true,
             "type" : "string"
           },
           "type" : {
@@ -690,6 +738,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "amount", "createdAt", "currency", "description", "id", "netAmount", "reference", "reversalOfTransactionId", "reversedByTransactionId", "type" ],
         "type" : "object"
       },
       "TransferRequest" : {
@@ -737,6 +786,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "email", "id", "role", "status" ],
         "type" : "object"
       },
       "WalletResponse" : {
@@ -764,11 +814,13 @@
             "type" : "string"
           }
         },
+        "required" : [ "balance", "createdAt", "currency", "id", "name", "status" ],
         "type" : "object"
       },
       "WebhookEventView" : {
         "properties" : {
           "error" : {
+            "nullable" : true,
             "type" : "string"
           },
           "eventType" : {
@@ -778,9 +830,12 @@
             "format" : "uuid",
             "type" : "string"
           },
-          "payload" : { },
+          "payload" : {
+            "type" : "object"
+          },
           "processedAt" : {
             "format" : "date-time",
+            "nullable" : true,
             "type" : "string"
           },
           "provider" : {
@@ -797,6 +852,7 @@
             "type" : "string"
           }
         },
+        "required" : [ "error", "eventType", "id", "payload", "processedAt", "provider", "providerEventId", "receivedAt", "status" ],
         "type" : "object"
       }
     },
@@ -814,7 +870,7 @@
     "title" : "Wallet & Double-Entry Ledger API",
     "version" : "v1"
   },
-  "openapi" : "3.1.0",
+  "openapi" : "3.0.1",
   "paths" : {
     "/api/v1/admin/overview" : {
       "get" : {

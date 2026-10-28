@@ -8,6 +8,7 @@ import com.example.wallet.ledger.AccountStatus;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public final class AdminDtos {
 
@@ -25,7 +26,8 @@ public final class AdminDtos {
     public record CurrencyAmount(String currency, long amount) {
     }
 
-    public record LastReconciliation(UUID id, String status, Instant startedAt, Instant finishedAt) {
+    public record LastReconciliation(UUID id, String status, Instant startedAt,
+                                     @Schema(nullable = true) Instant finishedAt) {
     }
 
     /**
@@ -33,6 +35,6 @@ public final class AdminDtos {
      * @param failedWebhooks24h FAILED + REJECTED webhook events in the last 24h
      */
     public record Overview(List<CurrencyAmount> volumeToday, long transfersToday, long failedWebhooks24h,
-                           LastReconciliation lastReconciliation) {
+                           @Schema(nullable = true) LastReconciliation lastReconciliation) {
     }
 }

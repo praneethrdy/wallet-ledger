@@ -515,24 +515,24 @@ export interface components {
     schemas: {
         AdminWalletView: {
             /** Format: int64 */
-            balance?: number;
+            balance: number;
             /** Format: date-time */
-            createdAt?: string;
-            currency?: string;
+            createdAt: string;
+            currency: string;
             /** Format: uuid */
-            id?: string;
-            name?: string;
-            ownerEmail?: string;
+            id: string;
+            name: string;
+            ownerEmail: string;
             /** Format: uuid */
-            ownerUserId?: string;
+            ownerUserId: string;
             /** @enum {string} */
-            status?: "ACTIVE" | "FROZEN" | "CLOSED";
+            status: "ACTIVE" | "FROZEN" | "CLOSED";
         };
         BalancePoint: {
             /** Format: int64 */
-            balance?: number;
+            balance: number;
             /** Format: date */
-            date?: string;
+            date: string;
         };
         CreateDepositRequest: {
             /** Format: int64 */
@@ -547,98 +547,98 @@ export interface components {
         };
         CurrencyAmount: {
             /** Format: int64 */
-            amount?: number;
-            currency?: string;
+            amount: number;
+            currency: string;
         };
         CurrencyTotal: {
             /** Format: int64 */
-            balance?: number;
-            currency?: string;
+            balance: number;
+            currency: string;
         };
         DailyFlow: {
             /** Format: date */
-            date?: string;
+            date: string;
             /** Format: int64 */
-            inflow?: number;
+            inflow: number;
             /** Format: int64 */
-            outflow?: number;
+            outflow: number;
         };
         DashboardSummary: {
-            cashFlow30d?: components["schemas"]["DailyFlow"][];
-            recentTransactions?: components["schemas"]["TransactionSummary"][];
-            thisMonth?: components["schemas"]["Flow"];
-            totals?: components["schemas"]["CurrencyTotal"][];
+            cashFlow30d: components["schemas"]["DailyFlow"][];
+            recentTransactions: components["schemas"]["TransactionSummary"][];
+            thisMonth: components["schemas"]["Flow"];
+            totals: components["schemas"]["CurrencyTotal"][];
         };
         DepositResponse: {
             /** Format: int64 */
-            amount?: number;
+            amount: number;
             /** Format: date-time */
-            createdAt?: string;
-            currency?: string;
+            createdAt: string;
+            currency: string;
             /** Format: uuid */
-            id?: string;
-            providerReference?: string;
+            id: string;
+            providerReference: string;
             /** @enum {string} */
-            status?: "PENDING" | "SUCCEEDED" | "FAILED";
+            status: "PENDING" | "SUCCEEDED" | "FAILED";
             /** Format: uuid */
-            transactionId?: string;
+            transactionId: string | null;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
             /** Format: uuid */
-            walletId?: string;
+            walletId: string;
         };
         EntryResponse: {
             /** Format: int64 */
-            amount?: number;
+            amount: number;
             /** Format: date-time */
-            createdAt?: string;
-            currency?: string;
-            description?: string;
+            createdAt: string;
+            currency: string;
+            description: string | null;
             /** @enum {string} */
-            direction?: "DEBIT" | "CREDIT";
-            reference?: string;
+            direction: "DEBIT" | "CREDIT";
+            reference: string;
             /** Format: int64 */
-            runningBalance?: number;
+            runningBalance: number;
             /** Format: uuid */
-            transactionId?: string;
+            transactionId: string;
             /** @enum {string} */
-            type?: "DEPOSIT" | "TRANSFER" | "REFUND" | "REVERSAL" | "FX_CONVERSION";
+            type: "DEPOSIT" | "TRANSFER" | "REFUND" | "REVERSAL" | "FX_CONVERSION";
         };
         Finding: {
-            check?: string;
-            details?: {
-                [key: string]: unknown;
+            check: string;
+            details: {
+                [key: string]: Record<string, never>;
             };
             /** @enum {string} */
-            severity?: "ERROR" | "WARNING";
+            severity: "ERROR" | "WARNING";
         };
         Flow: {
-            currency?: string;
+            currency: string;
             /** Format: int64 */
-            inflow?: number;
+            inflow: number;
             /** Format: int64 */
-            outflow?: number;
+            outflow: number;
         };
         LastReconciliation: {
             /** Format: date-time */
-            finishedAt?: string;
+            finishedAt: string | null;
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: date-time */
-            startedAt?: string;
-            status?: string;
-        };
+            startedAt: string;
+            status: string;
+        } | null;
         LegView: {
             /** Format: uuid */
-            accountId?: string;
-            accountName?: string;
+            accountId: string;
+            accountName: string;
             /** @enum {string} */
-            accountType?: "USER_WALLET" | "SYSTEM";
+            accountType: "USER_WALLET" | "SYSTEM";
             /** Format: int64 */
-            amount?: number;
-            currency?: string;
+            amount: number;
+            currency: string;
             /** @enum {string} */
-            direction?: "DEBIT" | "CREDIT";
+            direction: "DEBIT" | "CREDIT";
         };
         LoginRequest: {
             email: string;
@@ -646,31 +646,31 @@ export interface components {
         };
         Overview: {
             /** Format: int64 */
-            failedWebhooks24h?: number;
-            lastReconciliation?: components["schemas"]["LastReconciliation"];
+            failedWebhooks24h: number;
+            lastReconciliation: components["schemas"]["LastReconciliation"] | null;
             /** Format: int64 */
-            transfersToday?: number;
-            volumeToday?: components["schemas"]["CurrencyAmount"][];
+            transfersToday: number;
+            volumeToday: components["schemas"]["CurrencyAmount"][];
         };
         PageResponseAdminWalletView: {
-            items?: components["schemas"]["AdminWalletView"][];
-            nextCursor?: string;
+            items: components["schemas"]["AdminWalletView"][];
+            nextCursor: string | null;
         };
         PageResponseEntryResponse: {
-            items?: components["schemas"]["EntryResponse"][];
-            nextCursor?: string;
+            items: components["schemas"]["EntryResponse"][];
+            nextCursor: string | null;
         };
         PageResponseRunResponse: {
-            items?: components["schemas"]["RunResponse"][];
-            nextCursor?: string;
+            items: components["schemas"]["RunResponse"][];
+            nextCursor: string | null;
         };
         PageResponseTransactionSummary: {
-            items?: components["schemas"]["TransactionSummary"][];
-            nextCursor?: string;
+            items: components["schemas"]["TransactionSummary"][];
+            nextCursor: string | null;
         };
         PageResponseWebhookEventView: {
-            items?: components["schemas"]["WebhookEventView"][];
-            nextCursor?: string;
+            items: components["schemas"]["WebhookEventView"][];
+            nextCursor: string | null;
         };
         /** @description RFC 7807 problem details */
         Problem: {
@@ -712,85 +712,85 @@ export interface components {
         };
         RunResponse: {
             /** Format: int64 */
-            checkedTransactions?: number;
-            findings?: components["schemas"]["Finding"][];
+            checkedTransactions: number | null;
+            findings: components["schemas"]["Finding"][];
             /** Format: date-time */
-            finishedAt?: string;
+            finishedAt: string | null;
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: date-time */
-            startedAt?: string;
-            status?: string;
+            startedAt: string;
+            status: string;
             /** Format: int64 */
-            totalCredits?: number;
+            totalCredits: number | null;
             /** Format: int64 */
-            totalDebits?: number;
+            totalDebits: number | null;
             /** @enum {string} */
-            trigger?: "SCHEDULED" | "MANUAL";
+            trigger: "SCHEDULED" | "MANUAL";
         };
         SupportUserView: {
             /** Format: date-time */
-            createdAt?: string;
-            email?: string;
+            createdAt: string;
+            email: string;
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** @enum {string} */
-            role?: "CUSTOMER" | "SUPPORT" | "ADMIN";
+            role: "CUSTOMER" | "SUPPORT" | "ADMIN";
             /** @enum {string} */
-            status?: "ACTIVE" | "FROZEN";
+            status: "ACTIVE" | "FROZEN";
         };
         SupportWalletView: {
             /** Format: int64 */
-            balance?: number;
+            balance: number;
             /** Format: date-time */
-            createdAt?: string;
-            currency?: string;
+            createdAt: string;
+            currency: string;
             /** Format: uuid */
-            id?: string;
-            name?: string;
+            id: string;
+            name: string;
             /** @enum {string} */
-            status?: "ACTIVE" | "FROZEN" | "CLOSED";
+            status: "ACTIVE" | "FROZEN" | "CLOSED";
         };
         TokenResponse: {
-            accessToken?: string;
+            accessToken: string;
             /** Format: int64 */
-            expiresIn?: number;
-            refreshToken?: string;
-            user?: components["schemas"]["UserResponse"];
+            expiresIn: number;
+            refreshToken: string;
+            user: components["schemas"]["UserResponse"];
         };
         TransactionDetail: {
             /** Format: date-time */
-            createdAt?: string;
-            description?: string;
+            createdAt: string;
+            description: string | null;
             /** Format: uuid */
-            id?: string;
-            legs?: components["schemas"]["LegView"][];
-            reference?: string;
+            id: string;
+            legs: components["schemas"]["LegView"][];
+            reference: string;
             /** Format: uuid */
-            reversalOfTransactionId?: string;
+            reversalOfTransactionId: string | null;
             /** Format: uuid */
-            reversedByTransactionId?: string;
+            reversedByTransactionId: string | null;
             /** @enum {string} */
-            type?: "DEPOSIT" | "TRANSFER" | "REFUND" | "REVERSAL" | "FX_CONVERSION";
+            type: "DEPOSIT" | "TRANSFER" | "REFUND" | "REVERSAL" | "FX_CONVERSION";
         };
         TransactionSummary: {
             /** Format: int64 */
-            amount?: number;
+            amount: number;
             /** Format: date-time */
-            createdAt?: string;
-            currency?: string;
-            description?: string;
+            createdAt: string;
+            currency: string;
+            description: string | null;
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: int64 */
-            netAmount?: number;
-            reference?: string;
+            netAmount: number | null;
+            reference: string;
             /** Format: uuid */
-            reversalOfTransactionId?: string;
+            reversalOfTransactionId: string | null;
             /** Format: uuid */
-            reversedByTransactionId?: string;
+            reversedByTransactionId: string | null;
             /** @enum {string} */
-            type?: "DEPOSIT" | "TRANSFER" | "REFUND" | "REVERSAL" | "FX_CONVERSION";
+            type: "DEPOSIT" | "TRANSFER" | "REFUND" | "REVERSAL" | "FX_CONVERSION";
         };
         TransferRequest: {
             /** Format: int64 */
@@ -803,39 +803,39 @@ export interface components {
             toWalletId: string;
         };
         UserResponse: {
-            email?: string;
+            email: string;
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** @enum {string} */
-            role?: "CUSTOMER" | "SUPPORT" | "ADMIN";
+            role: "CUSTOMER" | "SUPPORT" | "ADMIN";
             /** @enum {string} */
-            status?: "ACTIVE" | "FROZEN";
+            status: "ACTIVE" | "FROZEN";
         };
         WalletResponse: {
             /** Format: int64 */
-            balance?: number;
+            balance: number;
             /** Format: date-time */
-            createdAt?: string;
-            currency?: string;
+            createdAt: string;
+            currency: string;
             /** Format: uuid */
-            id?: string;
-            name?: string;
+            id: string;
+            name: string;
             /** @enum {string} */
-            status?: "ACTIVE" | "FROZEN" | "CLOSED";
+            status: "ACTIVE" | "FROZEN" | "CLOSED";
         };
         WebhookEventView: {
-            error?: string;
-            eventType?: string;
+            error: string | null;
+            eventType: string;
             /** Format: uuid */
-            id?: string;
-            payload?: unknown;
+            id: string;
+            payload: Record<string, never>;
             /** Format: date-time */
-            processedAt?: string;
-            provider?: string;
-            providerEventId?: string;
+            processedAt: string | null;
+            provider: string;
+            providerEventId: string;
             /** Format: date-time */
-            receivedAt?: string;
-            status?: string;
+            receivedAt: string;
+            status: string;
         };
     };
     responses: never;

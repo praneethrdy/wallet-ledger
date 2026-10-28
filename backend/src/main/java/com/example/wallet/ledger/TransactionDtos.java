@@ -3,6 +3,7 @@ package com.example.wallet.ledger;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** Read models for transactions. Amounts are minor units (paise for INR). */
 public final class TransactionDtos {
@@ -15,10 +16,10 @@ public final class TransactionDtos {
             UUID id,
             String reference,
             TransactionType type,
-            String description,
+            @Schema(nullable = true) String description,
             Instant createdAt,
-            UUID reversalOfTransactionId,
-            UUID reversedByTransactionId,
+            @Schema(nullable = true) UUID reversalOfTransactionId,
+            @Schema(nullable = true) UUID reversedByTransactionId,
             List<LegView> legs) {
     }
 
@@ -42,13 +43,13 @@ public final class TransactionDtos {
             UUID id,
             String reference,
             TransactionType type,
-            String description,
+            @Schema(nullable = true) String description,
             Instant createdAt,
             String currency,
             long amount,
-            Long netAmount,
-            UUID reversalOfTransactionId,
-            UUID reversedByTransactionId) {
+            @Schema(nullable = true) Long netAmount,
+            @Schema(nullable = true) UUID reversalOfTransactionId,
+            @Schema(nullable = true) UUID reversedByTransactionId) {
     }
 
     /** Optional filters for transaction lists; {@code from} inclusive, {@code to} exclusive. */

@@ -11,6 +11,7 @@ import com.example.wallet.ledger.TransactionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public final class WalletDtos {
 
@@ -33,7 +34,7 @@ public final class WalletDtos {
             UUID transactionId,
             String reference,
             TransactionType type,
-            String description,
+            @Schema(nullable = true) String description,
             Direction direction,
             long amount,
             String currency,

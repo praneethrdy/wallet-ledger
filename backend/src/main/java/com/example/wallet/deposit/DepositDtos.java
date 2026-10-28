@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public final class DepositDtos {
 
@@ -23,7 +24,8 @@ public final class DepositDtos {
      * {@code transactionId} is set once the deposit has SUCCEEDED and been posted.
      */
     public record DepositResponse(UUID id, UUID walletId, long amount, String currency, String providerReference,
-                                  DepositStatus status, UUID transactionId, Instant createdAt, Instant updatedAt) {
+                                  DepositStatus status, @Schema(nullable = true) UUID transactionId,
+                                  Instant createdAt, Instant updatedAt) {
 
         static DepositResponse from(Deposit d) {
             return new DepositResponse(d.getId(), d.getWalletId(), d.getAmount(), d.getCurrency(),

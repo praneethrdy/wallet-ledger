@@ -78,8 +78,78 @@ public class OpenApiConfig {
             // Registered here, after generation: springdoc replaces the schemas of the base OpenAPI bean.
             openApi.getComponents().addSchemas(PROBLEM, problemSchema());
             openApi.getPaths().forEach((path, item) -> item.readOperationsMap().forEach((method, op) -> customize(path, method, op)));
+            markResponseFieldsRequired(openApi);
         };
     }
+
+    /**
+     * Response bodies always contain every field (Jackson writes null rather than omitting it),
+     * but springdoc can't know that and marks every record field optional. Generated clients
+     * would then type every field as possibly-undefined. Mark all properties of every schema
+     * reachable from a response as required; the few that can be null say so with
+     * {@code @Schema(nullable = true)}. Request schemas keep their real optional fields.
+     */
+    @SuppressWarnings("rawtypes")
+    private static void markResponseFieldsRequired(OpenAPI openApi) {
+        Map<String, Schema> schemas = openApi.getComponents().getSchemas();
+        java.util.Set<String> reachable = new java.util.TreeSet<>();
+        java.util.Deque<Schema> todo = new java.util.ArrayDeque<>();
+        openApi.getPaths().values().forEach(item -> item.readOperations().forEach(op -> {
+            if (op.getResponses() == null) {
+                return;
+            }
+            op.getResponses().values().forEach(response -> {
+                if (response.getContent() != null) {
+                    response.getContent().values().forEach(media -> {
+                        if (media.getSchema() != null) {
+                            todo.add(media.getSchema());
+                        }
+                    });
+                }
+            });
+        }));
+        while (!todo.isEmpty()) {
+            Schema schema = todo.pop();
+            String ref = schema.get$ref();
+            if (ref != null) {
+                String name = ref.substring(ref.lastIndexOf('/') + 1);
+                if (!PROBLEM.equals(name) && reachable.add(name) && schemas.get(name) != null) {
+                    todo.add(schemas.get(name));
+                }
+                continue;
+            }
+            if (schema.getItems() != null) {
+                todo.add(schema.getItems());
+            }
+            if (schema.getAdditionalProperties() instanceof Schema additional) {
+                todo.add(additional);
+            }
+            if (schema.getProperties() != null) {
+                ((Map<String, Schema>) schema.getProperties()).values().forEach(todo::add);
+            }
+        }
+        for (String name : reachable) {
+            Schema schema = schemas.get(name);
+            if (schema != null && schema.getProperties() != null) {
+                schema.setRequired(new java.util.ArrayList<String>(((Map<String, Schema>) schema.getProperties()).keySet()));
+            }
+        }
+        // In OpenAPI 3.0 keywords beside a $ref are ignored, so @Schema(nullable = true) can't mark a
+        // nullable object-typed field. Use the standard workaround: allOf: [$ref] + nullable.
+        NULLABLE_REFS.forEach((schemaName, property) -> {
+            Schema owner = schemas.get(schemaName);
+            if (owner != null && owner.getProperties() != null) {
+                Schema ref = (Schema) owner.getProperties().get(property);
+                if (ref != null && ref.get$ref() != null) {
+                    owner.getProperties().put(property, new io.swagger.v3.oas.models.media.ComposedSchema()
+                            .addAllOfItem(new Schema<>().$ref(ref.get$ref())).nullable(true));
+                }
+            }
+        });
+    }
+
+    /** Object-typed response fields that can be null (schema name -> property). */
+    private static final Map<String, String> NULLABLE_REFS = Map.of("Overview", "lastReconciliation");
 
     private static void customize(String path, PathItem.HttpMethod method, Operation op) {
         {

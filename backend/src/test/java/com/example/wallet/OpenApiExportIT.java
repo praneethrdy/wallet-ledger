@@ -49,10 +49,30 @@ class OpenApiExportIT extends AbstractIntegrationTest {
         assertThat(spec.path("paths").findValuesAsText("name")).doesNotContain("caller");
         assertThat(spec.path("components").path("schemas").has("AuthUser")).isFalse();
         assertThat(spec.path("components").path("schemas").has("JsonNode")).isFalse();
+        // Responses: every field present (generated clients mustn't see them as optional)...
+        JsonNode schemas = spec.path("components").path("schemas");
+        assertThat(texts(schemas.path("WalletResponse").path("required")))
+                .contains("id", "name", "currency", "status", "balance", "createdAt");
+        assertThat(texts(schemas.path("TransactionDetail").path("required"))).contains("description", "legs");
+        // ...and the genuinely nullable ones say so.
+        assertThat(schemas.path("TransactionDetail").path("properties").path("description").path("nullable").asBoolean())
+                .isTrue();
+        assertThat(schemas.path("PageResponseEntryResponse").path("properties").path("nextCursor").path("nullable")
+                .asBoolean()).isTrue();
+        assertThat(schemas.path("Overview").path("properties").path("lastReconciliation").path("nullable").asBoolean())
+                .isTrue();
+        // Requests keep their optional fields optional.
+        assertThat(texts(schemas.path("TransferRequest").path("required"))).doesNotContain("note");
 
         Object sorted = mapper.convertValue(spec, Map.class);
         String pretty = mapper.writeValueAsString(sorted) + "\n";
         Files.writeString(target(), pretty);
+    }
+
+    private static java.util.List<String> texts(JsonNode array) {
+        java.util.List<String> values = new java.util.ArrayList<>();
+        array.forEach(v -> values.add(v.asText()));
+        return values;
     }
 
     // Maven runs from backend/, IDEs sometimes from the repo root.

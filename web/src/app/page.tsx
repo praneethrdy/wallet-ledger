@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
 
 /**
- * Step 1: only the design system exists, so "/" opens the style guide.
- * Step 3 changes this: logged-out visitors go to /login (later the landing page), logged-in
- * users to /dashboard (docs/frontend-brief.md, "Routing of /").
+ * The proxy routes "/" before this renders: signed-in users go to their home area, everyone
+ * else to /login (a marketing landing page may replace this later, step 11).
  */
 export default function Home() {
-  redirect("/design");
+  redirect("/login");
 }

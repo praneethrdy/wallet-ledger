@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public final class ReconciliationDtos {
 
@@ -23,7 +24,11 @@ public final class ReconciliationDtos {
      *                     equality is what the GLOBAL_BALANCE check verifies)
      * @param findings     every ERROR and WARNING found
      */
-    public record RunResponse(UUID id, Trigger trigger, String status, Instant startedAt, Instant finishedAt,
-                              Long totalDebits, Long totalCredits, Long checkedTransactions, List<Finding> findings) {
+    public record RunResponse(UUID id, Trigger trigger, String status, Instant startedAt,
+                              @Schema(nullable = true) Instant finishedAt,
+                              @Schema(nullable = true) Long totalDebits,
+                              @Schema(nullable = true) Long totalCredits,
+                              @Schema(nullable = true) Long checkedTransactions,
+                              List<Finding> findings) {
     }
 }
