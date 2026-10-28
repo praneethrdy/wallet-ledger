@@ -22,6 +22,7 @@ import com.example.wallet.common.web.PageResponse;
 import com.example.wallet.ledger.AccountStatus;
 import com.example.wallet.ledger.LedgerService;
 import com.example.wallet.ledger.Sql;
+import com.example.wallet.ledger.TransactionDtos.TransactionDetail;
 import com.example.wallet.ledger.TransactionDtos.TransactionFilter;
 import com.example.wallet.ledger.TransactionDtos.TransactionSummary;
 import com.example.wallet.ledger.TransactionQueryService;
@@ -108,6 +109,14 @@ public class SupportService {
         details.put("to", filter.to());
         audit.record(staff.id(), "SUPPORT_SEARCH_TRANSACTIONS", "account", filter.walletId(), details, null);
         return page;
+    }
+
+    /** Any transaction with every leg under its real wallet name (unlike the customer view). */
+    @Transactional
+    public TransactionDetail transaction(AuthUser staff, UUID transactionId) {
+        TransactionDetail detail = transactions.detailForStaff(transactionId);
+        audit.record(staff.id(), "SUPPORT_VIEW_TRANSACTION", "transaction", transactionId, null, null);
+        return detail;
     }
 
     @Transactional

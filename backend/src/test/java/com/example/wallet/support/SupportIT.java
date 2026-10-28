@@ -26,15 +26,17 @@ class SupportIT extends ApiTest {
     TestUser alice;
     UUID aliceWallet;
     String transferReference;
+    String transferId;
 
     @BeforeEach
     void data() throws Exception {
         support = support();
         alice = customer();
         aliceWallet = ledger.fundedWallet(alice, 10_000);
-        transferReference = api.body(api.post(alice, "/api/v1/transfers",
-                Map.of("fromWalletId", aliceWallet, "toWalletId", ledger.wallet(customer()), "amount", 400, "currency", "INR")))
-                .path("reference").asText();
+        JsonNode transfer = api.body(api.post(alice, "/api/v1/transfers",
+                Map.of("fromWalletId", aliceWallet, "toWalletId", ledger.wallet(customer()), "amount", 400, "currency", "INR")));
+        transferReference = transfer.path("reference").asText();
+        transferId = transfer.path("id").asText();
     }
 
     @Test
@@ -67,6 +69,20 @@ class SupportIT extends ApiTest {
         assertThat(byWallet.path("items").get(0).path("netAmount").asLong()).isEqualTo(-400);
         api.get(support, "/api/v1/support/transactions?type=DEPOSIT")
                 .andExpect(jsonPath("$.items.length()").value(1));
+    }
+
+    @Test
+    void transactionDetailShowsEveryLegUnderItsRealNameAndIsAudited() throws Exception {
+        api.get(support, "/api/v1/support/transactions/" + transferId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reference").value(transferReference))
+                .andExpect(jsonPath("$.legs.length()").value(2))
+                .andExpect(jsonPath("$.legs[?(@.direction == 'CREDIT')].accountName").value("Test INR wallet"));
+        assertThat(ledger.count("SELECT count(*) FROM audit_log WHERE action = 'SUPPORT_VIEW_TRANSACTION' AND entity_id = ?",
+                transferId)).isEqualTo(1);
+
+        api.get(support, "/api/v1/support/transactions/" + UUID.randomUUID()).andExpect(status().isNotFound());
+        api.get(alice, "/api/v1/support/transactions/" + transferId).andExpect(status().isForbidden());
     }
 
     @Test

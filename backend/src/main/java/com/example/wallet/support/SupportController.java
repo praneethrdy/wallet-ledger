@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.wallet.auth.AuthUser;
 import com.example.wallet.auth.access.CanViewAnyUser;
 import com.example.wallet.common.web.PageResponse;
+import com.example.wallet.ledger.TransactionDtos.TransactionDetail;
 import com.example.wallet.ledger.TransactionDtos.TransactionFilter;
 import com.example.wallet.ledger.TransactionDtos.TransactionSummary;
 import com.example.wallet.ledger.TransactionType;
@@ -69,6 +70,12 @@ public class SupportController {
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
         return support.transactions(caller, new TransactionFilter(walletId, type, from, to, reference), cursor, limit);
+    }
+
+    @GetMapping("/transactions/{id}")
+    @Operation(summary = "One transaction with all legs (real wallet names) and reversal links")
+    public TransactionDetail transaction(AuthUser caller, @PathVariable UUID id) {
+        return support.transaction(caller, id);
     }
 
     @GetMapping("/webhook-events")
