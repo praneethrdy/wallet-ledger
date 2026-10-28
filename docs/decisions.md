@@ -2,7 +2,7 @@
 
 Short records of decisions that are non-obvious or that deviate from the spec. Format: context → decision → consequences.
 
-ADRs still to be written as their steps land: CSRF stance (Step 3), 404 vs 403 for foreign resources (Step 4), derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design and no Redis (Step 7).
+ADRs still to be written as their steps land: 404 vs 403 for foreign resources (Step 4), derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design and no Redis (Step 7).
 
 ---
 
@@ -112,3 +112,32 @@ The ON DELETE options for that FK all fail:
 **Decision.** `CorrelationIdFilter` runs first in the filter chain. It reuses the client's `X-Request-Id` only if the value matches `^[A-Za-z0-9._-]{1,64}$`, and otherwise generates a UUID. The ID goes into the logging context (MDC, as `correlationId`), into every log line, into the response header and into error bodies. It is removed from the MDC in a `finally` block, because servlet threads are pooled.
 
 **Why the check.** A client-supplied value containing CR/LF could forge log lines or inject response headers. An unbounded value bloats every log line.
+
+---
+
+## ADR-008: Authentication: JWT access tokens, rotating refresh tokens, CSRF stance
+
+**Status:** Accepted (Step 3)
+
+**Tokens.**
+- **Access token:** a JWT signed with HS256, valid for 15 minutes, with claims `iss`, `sub`, `role`, `iat`, `exp` and `jti`. It is verified without a DB lookup, so every request is cheap.
+  - HS256 (one shared secret) rather than RS256 (key pair), because only this service issues *and* verifies tokens; the BFF just forwards them.
+  - The decoder accepts only HS256 and our issuer, and requires `exp`. Clock skew tolerance is 30s, using the injected `Clock`.
+  - The secret comes from `JWT_SECRET` and must decode to at least 32 bytes, or startup fails.
+- **Refresh token:** 256 random bits, opaque, 7-day TTL. Only its SHA-256 hash is stored.
+
+**Rotation and reuse detection.** Each refresh revokes the presented token (`revoked_at`, `replaced_by`) and issues a successor in the same `family_id`. Presenting a revoked token revokes every token in that family and writes `REFRESH_TOKEN_REUSE_DETECTED` to the audit log. The transaction is configured not to roll back on this failure, so the revocation sticks even though the client gets a 401. The token row is read with `SELECT ... FOR UPDATE`, so two concurrent refreshes of the same token are serialized.
+
+**Strictness tradeoff.** Two legitimate parallel refreshes (e.g. two browser tabs) will trip reuse detection and force a re-login. We accept that: the BFF will refresh centrally, and a grace window would be a window for attackers.
+
+**Access tokens can't be revoked.** Logout, logout-all and freezing a user stop *refresh*, but an already-issued access token works until it expires (at most 15 min). This is the price of not checking the DB per request. A denylist keyed on `jti` is possible future work.
+
+**Login.** Every failure returns the same 401 body (no user enumeration). An unknown email still runs one Argon2 verification against a dummy hash, so response time doesn't reveal whether an account exists. The real reason (`UNKNOWN_EMAIL`, `BAD_PASSWORD` or `USER_FROZEN`) is recorded only in the audit log.
+
+**Registration enumeration.** `register` returns `409 EMAIL_ALREADY_REGISTERED` for an existing email, which does reveal that the account exists. Hiding it would need an email-verification flow, which is out of scope. Mitigated by the Phase 3 rate limits.
+
+**Passwords.** Argon2id with m=19 MiB, t=2, p=1 (OWASP minimum) and a 16-byte salt. Length must be 10 to 128 characters. The upper bound limits hashing cost per request.
+
+**CSRF disabled.** CSRF attacks ride on credentials the browser attaches automatically, i.e. cookies. This API authenticates only by an `Authorization: Bearer` header, which a browser never attaches on its own, so a malicious site can't forge an authenticated request. The Next.js BFF *will* hold a browser session cookie, so CSRF protection belongs there.
+
+**Emails** are lower-cased in Java before storing or looking them up. The `citext` column is a backstop: a JDBC `varchar` parameter can make Postgres compare `citext = varchar` as text, which is case-sensitive.

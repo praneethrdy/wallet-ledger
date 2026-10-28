@@ -3,3 +3,7 @@ logging:
   level:
     org.testcontainers: INFO
     org.flywaydb: INFO
+
+security:
+  auth:
+    jwt-secret: dGVzdC1vbmx5LWp3dC1zZWNyZXQtMzItYnl0ZXMtbG9uZyE=

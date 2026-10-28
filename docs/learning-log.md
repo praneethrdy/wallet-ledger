@@ -50,3 +50,30 @@ _Interview Q&A: skipped for now; answer later. The break-it exercise on the defe
 **Test slices.** `@WebMvcTest` starts only the web layer (controllers, advice, filters, Jackson), so there's no DB or Docker and it's fast. Use it for HTTP-contract tests; use `@SpringBootTest` + Testcontainers when the DB matters.
 
 _Interview Q&A for this step: pending._
+
+---
+
+## Phase 1 · Step 3: Authentication
+
+**Hashing passwords: why Argon2id.** A password hash must be *slow* and *memory-hard* so that a stolen database can't be brute-forced at billions of guesses per second on GPUs. SHA-256 is fast (bad here). bcrypt is slow but not memory-hard. Argon2id is both. Each hash embeds its salt and parameters (`$argon2id$v=19$m=19456,t=2,p=1$salt$hash`), so the cost can be raised later.
+
+**Why SHA-256 is fine for refresh tokens.** They are 256 random bits, so there is nothing to guess. A fast, deterministic hash lets us look the token up, and a DB leak doesn't leak usable tokens.
+
+**Access vs refresh tokens.** A short-lived JWT (15 min) is verified with just a signature check, with no DB call. A long-lived opaque refresh token (7 days) lives in the DB, so it *can* be revoked. Short access tokens bound how long a stolen or revoked one stays useful.
+
+**JWT anatomy.** `header.payload.signature`, each base64url. The payload is readable by anyone, so it holds no secrets; it is protected only against *changes*. Changing `role: CUSTOMER` to `ADMIN` breaks the signature, and we test exactly that. Pin the algorithm (HS256 only) so `alg: none` tricks fail.
+
+**Refresh-token rotation and reuse detection.** Each refresh returns a new token and revokes the old one, all in one *family*. If an old token shows up again, two parties have copies. We can't tell which is the thief, so we kill the whole family and audit it.
+
+**Transactions that must commit on failure.** `@Transactional(noRollbackFor = AuthenticationFailedException.class)` lets us return 401 while still committing the family revocation and the audit row.
+
+**No user enumeration.** Use the same error for an unknown email and a wrong password. Spend the same time on both (verify against a dummy hash), and record the real reason only server-side.
+
+**Stateless security.** No server session: each request carries its proof. CSRF protection is for cookie-based auth; with bearer headers there is nothing for a malicious site to forge.
+
+**Gotchas hit in this step.**
+- A test expected one reuse audit event, but presenting the *second* (family-revoked) token is also a reuse, so 2 was correct. The fix was to assert the count after each step, which makes the test stricter rather than weaker.
+- Security failures happen in filters, before controllers, so `@RestControllerAdvice` never sees them. A custom `AuthenticationEntryPoint`/`AccessDeniedHandler` keeps the ProblemDetail shape.
+- `@WebMvcTest` pulls in Spring Security's auto-config. Exclude it for tests that aren't about security.
+
+_Interview Q&A for this step: pending._

@@ -32,6 +32,13 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 
+security:
+  auth:
+    # jwt-secret is set per profile (dev default / test fixed / prod from env JWT_SECRET only).
+    issuer: wallet-backend
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+
 server:
   # Boot's fallback /error page (used for errors outside MVC, e.g. in filters) must not leak internals.
   error:

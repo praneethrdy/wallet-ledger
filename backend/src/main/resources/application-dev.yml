@@ -8,3 +8,8 @@ spring:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:wallet}
     user: ${DB_OWNER_USER:wallet_owner}
     password: ${DB_OWNER_PASSWORD:owner_dev}
+
+security:
+  auth:
+    # DEV ONLY. Generate a real one with:  openssl rand -base64 32
+    jwt-secret: ${JWT_SECRET:ZGV2LW9ubHktand0LXNlY3JldC1jaGFuZ2UtbWUtMzJieXRlcyE=}

@@ -23,6 +23,15 @@ Dev defaults are in [.env.example](.env.example). Copy it to `.env` to override 
 
 If you edit a migration that already ran locally, reset the dev database with `docker compose down -v`. Never do this to a shared or production DB; fix forward with a new migration instead.
 
+## Configuration
+
+| Env var | Purpose | Dev default |
+|---|---|---|
+| `JWT_SECRET` | base64 HMAC key for access tokens (≥ 32 bytes); **required in prod** | built-in dev value |
+| `DB_*`, `POSTGRES_*` | database connection (see `.env.example`) | compose defaults |
+
+Generate a production secret with `openssl rand -base64 32`.
+
 ## Database roles
 
 | Role | Used by | Privileges |

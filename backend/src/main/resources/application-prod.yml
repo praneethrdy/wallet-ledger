@@ -8,3 +8,7 @@ spring:
     url: ${DB_URL}
     user: ${DB_OWNER_USER}
     password: ${DB_OWNER_PASSWORD}
+
+security:
+  auth:
+    jwt-secret: ${JWT_SECRET}

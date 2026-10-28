@@ -13,6 +13,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -35,8 +39,13 @@ import jakarta.validation.constraints.Positive;
 /**
  * Web-layer slice test (no DB, no Docker): the error contract and the correlation ID.
  * A tiny probe controller throws each kind of error so we can check the response shape.
+ * Security is excluded here on purpose: 401/403 responses are covered by AuthIT.
  */
-@WebMvcTest(controllers = ErrorHandlingTest.ProbeController.class)
+@WebMvcTest(controllers = ErrorHandlingTest.ProbeController.class, excludeAutoConfiguration = {
+        SecurityAutoConfiguration.class,
+        SecurityFilterAutoConfiguration.class,
+        UserDetailsServiceAutoConfiguration.class,
+        OAuth2ResourceServerAutoConfiguration.class})
 @Import(ErrorHandlingTest.ProbeController.class)
 class ErrorHandlingTest {
 
