@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { Logo } from "@/components/brand/logo";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { navFor } from "@/components/shell/nav-items";
 import { NavLinks } from "@/components/shell/nav-links";
 import { UserMenu } from "@/components/shell/user-menu";
@@ -32,7 +33,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      <main className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 sm:py-10">
+        <QueryProvider>{children}</QueryProvider>
+      </main>
     </div>
   );
 }
