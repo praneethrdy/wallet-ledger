@@ -1,11 +1,11 @@
 # Local development against `docker compose up -d`. Defaults match .env.example.
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:wallet}
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:wallet}
     username: ${DB_APP_USER:wallet_app}
     password: ${DB_APP_PASSWORD:app_dev}
   flyway:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:wallet}
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:wallet}
     user: ${DB_OWNER_USER:wallet_owner}
     password: ${DB_OWNER_PASSWORD:owner_dev}
 

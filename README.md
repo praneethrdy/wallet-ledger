@@ -158,7 +158,7 @@ Full contract: **[backend/openapi.json](backend/openapi.json)**. When running lo
 Prerequisites: JDK 21 and Docker.
 
 ```bash
-docker compose up -d                      # Postgres 16 with wallet_owner / wallet_app roles
+docker compose up -d                      # Postgres 16 on localhost:5433, with wallet_owner / wallet_app roles
 cd backend
 ./mvnw spring-boot:run                    # dev profile: migrations + seed data + mock provider
 ```
@@ -257,5 +257,7 @@ Created on startup in the `dev` profile only (`DevDataSeeder`), along with two f
 ```powershell
 setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"   # then open a new terminal
 ```
+
+**`password authentication failed for user "wallet_owner"` on startup.** Something else (often a locally installed PostgreSQL) answers on the port the app uses. The dev database listens on **5433** by default; change `POSTGRES_PORT` in `.env` if that's taken too.
 
 **Integration tests fail with "Could not find a valid Docker environment".** Docker Desktop isn't running, or its engine is stuck. Restart Docker Desktop.
