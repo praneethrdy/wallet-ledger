@@ -1,0 +1,15 @@
+meta {
+  name: Dashboard summary
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/dashboard/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

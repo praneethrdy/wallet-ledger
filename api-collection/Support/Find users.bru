@@ -1,0 +1,15 @@
+meta {
+  name: Find users
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/support/users?email=wallet.local
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{supportToken}}
+}

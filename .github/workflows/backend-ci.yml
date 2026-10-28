@@ -1,0 +1,52 @@
+name: backend-ci
+
+on:
+  push:
+    paths: ["backend/**", "docker/postgres/**", ".github/workflows/backend-ci.yml"]
+  pull_request:
+    paths: ["backend/**", "docker/postgres/**", ".github/workflows/backend-ci.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Unit + integration tests (Testcontainers uses the runner's Docker) + JaCoCo >= 80% gate.
+      - name: Verify
+        run: ./mvnw -B verify
+
+      # OpenApiExportIT regenerates the contract; a diff means someone changed the API
+      # without committing the new openapi.json the frontend depends on.
+      - name: OpenAPI contract is committed and up to date
+        run: git diff --exit-code openapi.json
+
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-reports
+          path: |
+            backend/target/site/jacoco/
+            backend/target/surefire-reports/
+            backend/target/failsafe-reports/
+
+  docker:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t wallet-backend:${{ github.sha }} backend

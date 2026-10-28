@@ -1,0 +1,15 @@
+meta {
+  name: Balance history
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/wallets/{{walletId}}/balance-history?days=30
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

@@ -46,7 +46,8 @@ class IdempotencyKeyRequiredIT extends ApiTest {
                         Map.of("walletId", any, "amount", 1, "currency", "INR")),
                 Arguments.of(Role.ADMIN, "/api/v1/admin/transactions/" + any + "/reverse", Map.of("reason", "x")),
                 Arguments.of(Role.ADMIN, "/api/v1/admin/wallets/" + any + "/freeze", null),
-                Arguments.of(Role.ADMIN, "/api/v1/admin/wallets/" + any + "/unfreeze", null)
+                Arguments.of(Role.ADMIN, "/api/v1/admin/wallets/" + any + "/unfreeze", null),
+                Arguments.of(Role.ADMIN, "/api/v1/admin/reconciliation/run", null)
         );
     }
 
@@ -57,7 +58,8 @@ class IdempotencyKeyRequiredIT extends ApiTest {
             "POST /api/v1/deposits",
             "POST /api/v1/admin/transactions/{id}/reverse",
             "POST /api/v1/admin/wallets/{id}/freeze",
-            "POST /api/v1/admin/wallets/{id}/unfreeze");
+            "POST /api/v1/admin/wallets/{id}/unfreeze",
+            "POST /api/v1/admin/reconciliation/run");
 
     @ParameterizedTest(name = "{1}")
     @MethodSource("mutatingEndpoints")

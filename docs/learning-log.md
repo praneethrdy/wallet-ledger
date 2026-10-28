@@ -97,3 +97,40 @@ _Interview Q&A for this step: pending._
 **Guard tests.** Some rules ("every endpoint declares who may call it") are best enforced by a test that inspects the application itself. We proved it by adding an unprotected endpoint and watching the build fail with the endpoint's name.
 
 _Interview Q&A for this step: pending._
+
+---
+
+## Steps 5–14 (built in one go at the user's request)
+
+**Derived balances (Step 5).** A balance is a query (`SUM(credits) − SUM(debits)`), not a column. There is nothing to keep in sync, so nothing can drift. The `(account_id, created_at, id)` index keeps it fast.
+
+**Keyset pagination.** "Rows older than (created_at, id) of the last row I saw" instead of `OFFSET n`. It's fast at any depth and stable while new rows arrive. Running balances come from one SUM at the top of the page, then walking down the page subtracting each entry's effect.
+
+**Pessimistic locking in a global order (Step 6).** `SELECT … FOR UPDATE` on every wallet a transaction touches, always in UUID order, so two transfers can never each hold the lock the other wants. Check the balance *after* the lock, at READ COMMITTED: each statement sees everything committed before it ran.
+
+**Why READ COMMITTED, not REPEATABLE READ, for transfers.** REPEATABLE READ takes its snapshot at the first statement, which can be *before* we waited for the lock. We'd then compute the balance without the debit that just committed. READ COMMITTED re-snapshots per statement.
+
+**Idempotency (Step 7).** Reserve the key before touching money. Store the response in the *same* transaction as the money movement, so a crash can't leave "money moved, key not marked". Use the reservation timestamp as a fencing token so a slow original and a takeover can't both commit.
+
+**Webhooks (Step 8).** Verify the HMAC over the exact raw bytes, compare in constant time, put the timestamp inside the MAC, and allow ±5 min. Make processing idempotent at two levels: the event id, and the deposit state behind a row lock. Store forgeries under synthetic ids so they can't squat on a real event's id.
+
+**Reversals (Step 9).** Never edit; post the mirror image. A partial unique index makes "reversed at most once" a database fact, not a hope.
+
+**Read models (Steps 10–11).** Aggregate in SQL, not in Java loops. Netting per transaction across all your wallets means moving money between your own wallets is neither inflow nor outflow. Use REPEATABLE READ for multi-query read pages so the numbers agree with each other.
+
+**Reconciliation (Step 12).** Re-derive every invariant from raw rows on one consistent snapshot. Test it by injecting corruption the way it would really happen: a superuser with triggers disabled.
+
+**Observability (Step 13).** A correlation ID in every log line and error body; JSON logs in prod; business metrics (transfers by outcome, idempotency replays, webhook outcomes, lock wait, reconciliation mismatches) next to the HTTP ones.
+
+**Shipping (Step 14).**
+- A multi-stage Docker build ending in a non-root JRE image.
+- CI runs the real-database test suite and a coverage gate, and fails if the API contract (`openapi.json`) changed without being committed.
+
+**Gotchas hit in these steps.**
+- **JPA inserts are invisible to JDBC until flush.** Inserting an account with `save()` and then posting to it via `JdbcTemplate` in the same transaction fails with "unknown account". Use `saveAndFlush`.
+- **`citext` columns come back as `PGobject` from `queryForList`.** Select `email::text`.
+- **Every cached Spring test context keeps its own connection pool.** With several contexts sharing one container, Postgres ran out of connections. Use small test pools and a higher `max_connections`.
+- **A "successful" coverage gate can be an absent one.** The JaCoCo plugin edit had silently not applied. Always look at the report, not just "BUILD SUCCESS".
+- **Test expectations can be wrong too.** For example, reversing a deposit after part of it was spent *should* fail. Fix the test's premise, never weaken the assertion.
+
+_Interview Q&A for these steps: pending._

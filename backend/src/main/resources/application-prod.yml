@@ -17,3 +17,15 @@ webhook:
   payment-provider:
     secret: ${WEBHOOK_SECRET}
     previous-secret: ${WEBHOOK_PREVIOUS_SECRET:}
+
+server:
+  # Behind a TLS-terminating proxy: trust X-Forwarded-* so request.getRemoteAddr() is the client.
+  # Only safe when the app is reachable exclusively through that proxy (docs/deployment.md).
+  forward-headers-strategy: native
+
+springdoc:
+  # The contract is published as backend/openapi.json; don't serve live docs in prod.
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

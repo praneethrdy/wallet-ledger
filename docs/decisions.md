@@ -2,7 +2,6 @@
 
 Short records of decisions that are non-obvious or that deviate from the spec. Format: context → decision → consequences.
 
-ADRs still to be written as their steps land: derived vs cached balance (Step 5), pessimistic vs optimistic locking (Step 6), idempotency design and no Redis (Step 7).
 
 ---
 
@@ -176,3 +175,126 @@ The ON DELETE options for that FK all fail:
 **Why roles come from the JWT, not the DB.** It's cheap: no lookup per request. The cost is that a role change takes effect only when the next access token is issued (at most 15 min later). Freezing a user stops refresh immediately (ADR-008).
 
 **`@PreAuthorize` failures** are thrown inside the controller call, so they reach `@RestControllerAdvice` rather than Spring Security's filter. `GlobalExceptionHandler` maps `AccessDeniedException` to 403 and `AuthenticationException` to 401. Without that, the catch-all handler would turn them into 500s.
+
+---
+
+## ADR-011: Derived balances only; no cached balance
+
+**Status:** Accepted (Step 5)
+
+**Context.** The spec allows an optional `accounts.cached_balance`, updated in the same transaction as the ledger insert and checked by reconciliation.
+
+**Decision.** Balances are always computed as `SUM(credits) − SUM(debits)` over `ledger_entries` for the account. `cached_balance` exists in the schema but is never written.
+
+**Why.**
+- There is exactly one source of truth, so there is no second number that can drift from the ledger.
+- Every balance query hits the `(account_id, created_at, id)` index; for a wallet with thousands of entries this is milliseconds.
+- The transfer path already holds the wallet's row lock, so computing the SUM under the lock is correct (ADR-012).
+
+**Consequences.** Balance cost grows with a wallet's history. If a wallet reached millions of entries, the next step would be periodic balance snapshots (an append-only table of "balance as of entry N") plus a SUM of the tail, or a cached balance verified nightly. Reconciliation check 4 (cached vs derived) is therefore not applicable.
+
+---
+
+## ADR-012: Pessimistic row locks in a fixed global order
+
+**Status:** Accepted (Step 6)
+
+**Context.** Fifty concurrent transfers from one wallet must not overspend it, and opposing transfers (A→B and B→A) must not deadlock.
+
+**Decision.**
+- Every writer that changes a user wallet's entries (transfer, deposit settlement, reversal, freeze) first takes `SELECT … FOR UPDATE` on the wallet row, through `AccountLocker` only.
+- `AccountLocker` sorts IDs by their UUID text, which matches Postgres' `uuid` order, before locking. A cycle of waiters can't form, so there are no deadlocks.
+- Balances are checked **after** acquiring the locks, at **READ COMMITTED**. Each statement takes a fresh snapshot, so the SUM sees every write committed before we got the lock. (At REPEATABLE READ the snapshot would predate the lock wait and miss a just-committed debit.)
+- System accounts are never locked: nothing checks their balance, and locking EXTERNAL_FUNDING would serialise every deposit platform-wide.
+
+**Alternatives.**
+- **Optimistic locking** (`@Version`, retry on conflict): no blocking, but under contention most attempts fail and retry. For a hot wallet that's wasted work and unpredictable latency, plus retry logic in every caller.
+- **SERIALIZABLE isolation**: correct without explicit locks, but Postgres aborts conflicting transactions (`40001`), so every money operation needs a retry loop. That's harder to reason about and to test.
+- **Single-writer queue per wallet** (Kafka partition per account): scales further, but needs infrastructure the spec rules out (ADR-014).
+
+**Consequences.** Throughput on one wallet is limited to one transfer at a time, which is fine for consumer wallets. Proven by `TransferConcurrencyIT`: 50 parallel transfers yield exactly 10 successes, and 100 opposing ones produce zero deadlocks.
+
+---
+
+## ADR-013: Idempotency as a service wrapper, with completion in the business transaction
+
+**Status:** Accepted (Step 7)
+
+**Options considered.**
+1. **Servlet filter / interceptor + `ResponseBodyAdvice`**: generic and invisible to controllers. But it runs *outside* the business transaction, so "transfer committed" and "key marked COMPLETED" are two separate commits. A crash between them leaves an IN_PROGRESS key; after the 60s takeover, a retry executes the transfer **again**.
+2. **`IdempotencyService.execute(caller, key, request, body, operation)` called by each controller**, the one we chose. The operation and the `UPDATE idempotency_keys SET status = 'COMPLETED', response_body = …` run in **one** transaction: both commit or neither does.
+
+**How it works.**
+- **Reserve:** `INSERT … ON CONFLICT DO NOTHING` in its own committed transaction, *before* any state change. On conflict:
+  - same hash and COMPLETED → replay with `Idempotent-Replayed: true`;
+  - different hash → `422 IDEMPOTENCY_KEY_REUSED`;
+  - IN_PROGRESS → wait up to 5s polling, then replay or `409`.
+- **Request hash:** SHA-256 of method + path + *canonical* JSON (keys sorted), so re-serialised retries match.
+- **Business transaction:** first `SELECT … FOR UPDATE` on the key row and confirm `locked_at` is still ours. That value is a fencing token: if a takeover happened, we abort.
+- **4xx business errors:** nothing changed, so the ProblemDetail is stored and replayed. On a 5xx the reservation is deleted so the client can retry.
+- **Stale takeover:** `UPDATE … WHERE locked_at = <old>`. It blocks while the original still holds the row lock; if the original commits, status is COMPLETED and the takeover matches 0 rows.
+- **Missing header:** `@RequestHeader("Idempotency-Key")` is the first controller parameter, so a missing key fails with `400 IDEMPOTENCY_KEY_REQUIRED` before the body is even parsed.
+
+**Guard.** `IdempotencyKeyRequiredIT` lists every mutating endpoint, and fails if a new POST appears without being added (and therefore tested).
+
+**Consequences.** Each controller makes one explicit call: visible, and easy to review. A replayed body is semantically, not byte-for-byte, identical, because JSONB normalises key order.
+
+---
+
+## ADR-014: No Redis, Kafka or other infrastructure
+
+**Status:** Accepted
+
+Everything the spec needs is done in PostgreSQL:
+- **Locks:** row locks.
+- **Idempotency store:** a unique index plus `ON CONFLICT`.
+- **Job coordination:** ShedLock's JDBC table.
+- **Rate-limit windows** (Phase 3): a table.
+- **Audit:** an append-only table.
+
+Each extra system would bring its own failure modes, its own consistency gaps with the ledger, and its own operational load. Above all, an idempotency key in Redis can't commit atomically with a ledger insert in Postgres (ADR-013). Redis would be reconsidered for hot-path caching or rate limiting at a scale where Postgres becomes the bottleneck, and measurements would show that first.
+
+---
+
+## ADR-015: Webhook security
+
+**Status:** Accepted (Step 8)
+
+- **Signature:** `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + rawBody))`, verified over the **raw bytes** (the controller takes `byte[]`) *before* parsing, and compared with `MessageDigest.isEqual` (constant time).
+- **Replay protection:** the timestamp is inside the MAC and must be within ±5 min of now. An old captured request can't be replayed, and its timestamp can't be altered.
+- **Rotation:** the current and previous secrets are both accepted; every candidate is checked with no early exit.
+- **Event idempotency:** `UNIQUE (provider, provider_event_id)` + `ON CONFLICT DO NOTHING`. A PROCESSED duplicate returns 200 without reprocessing.
+- **Deposit idempotency:** the deposit row is locked while settling, and an already-SUCCEEDED deposit is a no-op. A *different* event id for the same deposit can't credit twice.
+- **Amount check:** the event's amount and currency must equal the deposit's; otherwise it's acknowledged as FAILED and nothing is credited.
+- **Forensics:** every request is stored, including forgeries, as REJECTED. Forgeries get a synthetic id (`rejected:<uuid>`) so a forged event can never occupy the id of a real one and make the real delivery look like a duplicate.
+- **Status codes:** 401 for bad signature or staleness; 200 for authentic events we can't apply (a retry wouldn't help); 500 only for unexpected errors, so the provider retries.
+- **Frozen wallets *are* credited:** the customer's money has already arrived, and freezing blocks spending, not receiving settled funds.
+
+---
+
+## ADR-016: Reversals instead of edits
+
+**Status:** Accepted (Step 9)
+
+A wrong transaction is corrected by a **REVERSAL** transaction whose legs mirror the original (DEBIT↔CREDIT, same accounts and amounts). The original rows are never touched; the database forbids it (ADR-003).
+
+- **At most one reversal per transaction:** the partial unique index `ux_transactions_reversal_of` enforces it even if two admins race past the Java check. The unique violation is mapped to `409 ALREADY_REVERSED`.
+- **A reversal can't be reversed** (`422 REVERSAL_NOT_ALLOWED`). To redo the original effect, post it again as a new transaction, which keeps the story linear and readable.
+- **No negative wallets:** if reversing would take a user wallet below zero (the recipient already spent the money), it fails with `422 INSUFFICIENT_FUNDS_FOR_REVERSAL`. Recovering that money is a business process, not a ledger edit.
+- **Locking:** affected user wallets are locked in global order (ADR-012).
+- **Frozen wallets:** a reversal on a frozen wallet is allowed, because it's a staff correction, not customer spending.
+- **Audit:** the reason is required and is stored in the description, the metadata and the audit log.
+
+---
+
+## ADR-017: Reconciliation on one consistent snapshot
+
+**Status:** Accepted (Step 12)
+
+All checks run in a single **REPEATABLE READ, read-only** transaction, so they see one point-in-time snapshot. Otherwise a transfer committing between "global totals" and "per-transaction balance" could make the two checks disagree and raise a false alarm.
+
+- **Persistence:** the run row is written in separate transactions (RUNNING at the start, then PASSED/FAILED), so a crash still leaves a record.
+- **Errors vs warnings:** findings are ERROR or WARNING. Stale PENDING deposits only warn, since they're a provider or customer issue, not a ledger inconsistency.
+- **Scheduling:** `@Scheduled` at 02:00 Asia/Kolkata plus ShedLock (`usingDbTime()`), so exactly one instance runs it per night.
+- **On failure:** the run logs at ERROR and increments `ledger.reconciliation.mismatches`, which an alert should watch.
+- **Testing:** tests inject corruption the only way it could really happen, with a superuser connection and triggers disabled, and assert each check catches it.

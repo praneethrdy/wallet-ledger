@@ -1,0 +1,29 @@
+meta {
+  name: Transfer between own wallets
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/transfers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "fromWalletId": "{{walletId}}",
+    "toWalletId": "{{otherWalletId}}",
+    "amount": 2500,
+    "currency": "INR",
+    "note": "Savings top-up"
+  }
+}
+
+script:post-response {
+  bru.setVar("transactionId", res.body.id);
+}

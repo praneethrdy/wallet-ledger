@@ -1,0 +1,26 @@
+meta {
+  name: Create wallet
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/wallets
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Holiday fund",
+    "currency": "INR"
+  }
+}
+
+script:post-response {
+  bru.setVar("newWalletId", res.body.id);
+}

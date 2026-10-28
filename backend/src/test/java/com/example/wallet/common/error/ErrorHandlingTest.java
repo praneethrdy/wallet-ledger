@@ -122,6 +122,14 @@ class ErrorHandlingTest {
     }
 
     @Test
+    void oversizedBodyIs413() throws Exception {
+        String huge = "{\"name\":\"" + "x".repeat(70_000) + "\",\"amount\":1}";
+        mvc.perform(post("/probe/validate").contentType(MediaType.APPLICATION_JSON).content(huge))
+                .andExpect(status().isPayloadTooLarge())
+                .andExpect(jsonPath("$.code").value("PAYLOAD_TOO_LARGE"));
+    }
+
+    @Test
     void malformedJsonIs400() throws Exception {
         mvc.perform(post("/probe/validate").contentType(MediaType.APPLICATION_JSON).content("{not json"))
                 .andExpect(status().isBadRequest())

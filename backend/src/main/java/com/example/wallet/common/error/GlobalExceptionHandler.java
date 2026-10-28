@@ -25,6 +25,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.example.wallet.common.web.CorrelationIdFilter;
+import com.example.wallet.common.web.RequestSizeLimitFilter;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
@@ -134,6 +135,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            if (t instanceof RequestSizeLimitFilter.PayloadTooLargeException tooLarge) {
+                ProblemDetail body = problem(ErrorCode.PAYLOAD_TOO_LARGE, tooLarge.getMessage());
+                return handleExceptionInternal(ex, body, headers, ErrorCode.PAYLOAD_TOO_LARGE.status(), request);
+            }
+        }
         List<FieldViolation> errors = new ArrayList<>();
         Throwable cause = ex.getMostSpecificCause();
         if (cause instanceof UnrecognizedPropertyException upe) {

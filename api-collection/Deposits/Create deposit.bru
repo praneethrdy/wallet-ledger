@@ -1,0 +1,28 @@
+meta {
+  name: Create deposit
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/deposits
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "walletId": "{{walletId}}",
+    "amount": 50000,
+    "currency": "INR"
+  }
+}
+
+script:post-response {
+  bru.setVar("depositId", res.body.id);
+  bru.setVar("providerReference", res.body.providerReference);
+}

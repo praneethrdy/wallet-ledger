@@ -1,0 +1,11 @@
+meta {
+  name: Mock provider - complete (dev)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/dev/mock-provider/deposits/{{providerReference}}/complete?outcome=success
+  body: none
+  auth: none
+}

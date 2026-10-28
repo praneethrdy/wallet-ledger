@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: wallet-backend
+    metrics_path: /actuator/prometheus
+    static_configs:
+      # backend container (compose --profile app) and an app started on the host (./mvnw spring-boot:run)
+      - targets: ["backend:8080", "host.docker.internal:8080"]

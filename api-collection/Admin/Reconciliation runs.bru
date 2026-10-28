@@ -1,0 +1,15 @@
+meta {
+  name: Reconciliation runs
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/reconciliation/runs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}

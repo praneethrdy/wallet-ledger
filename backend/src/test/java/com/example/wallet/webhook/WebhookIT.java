@@ -212,6 +212,44 @@ class WebhookIT extends ApiTest {
                 .andExpect(status().isForbidden());
     }
 
+    // ---- authentic but unusable payloads ------------------------------------------------
+
+    @Test
+    void signedButMalformedPayloadIs400AndKeptForForensics() throws Exception {
+        deliver("this is not json", SECRET, now())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+        deliver("{\"type\":\"deposit.succeeded\"}", SECRET, now()).andExpect(status().isBadRequest()); // no id
+
+        assertThat(ledger.count("SELECT count(*) FROM webhook_events WHERE status = 'REJECTED'")).isEqualTo(2);
+        assertThat(ledger.count("SELECT count(*) FROM webhook_events WHERE payload ->> 'unparseable' = 'true'"))
+                .as("non-JSON bodies are stored wrapped, not dropped").isEqualTo(1);
+    }
+
+    @Test
+    void forgedGarbageIsStoredWrappedAndRejected() throws Exception {
+        deliver("<xml>not even json</xml>", "attacker", now()).andExpect(status().isUnauthorized());
+
+        assertThat(ledger.count("""
+                SELECT count(*) FROM webhook_events
+                WHERE status = 'REJECTED' AND event_type = 'unknown' AND payload ->> 'raw' LIKE '<xml>%'
+                """)).isEqualTo(1);
+    }
+
+    @Test
+    void unsupportedOrIncompleteEventsAreAcknowledgedButNotApplied() throws Exception {
+        deliver("{\"id\":\"evt_type\",\"type\":\"refund.created\",\"data\":{\"providerReference\":\"" + reference + "\"}}",
+                SECRET, now()).andExpect(jsonPath("$.status").value("failed"));
+        deliver("{\"id\":\"evt_noref\",\"type\":\"deposit.succeeded\",\"data\":{\"amount\":1}}", SECRET, now())
+                .andExpect(jsonPath("$.status").value("failed"));
+        deliver("{\"id\":\"evt_noamt\",\"type\":\"deposit.succeeded\",\"data\":{\"providerReference\":\"" + reference + "\"}}",
+                SECRET, now()).andExpect(jsonPath("$.status").value("failed"));
+
+        assertThat(ledger.balance(wallet)).isZero();
+        assertThat(ledger.count("SELECT count(*) FROM webhook_events WHERE status = 'FAILED' AND error IS NOT NULL"))
+                .isEqualTo(3);
+    }
+
     // ---- helpers -------------------------------------------------------------------------
 
     private ResultActions deliver(String body, String secret, long timestamp) throws Exception {

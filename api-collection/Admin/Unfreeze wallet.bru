@@ -1,0 +1,15 @@
+meta {
+  name: Unfreeze wallet
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/wallets/{{walletId}}/unfreeze
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}

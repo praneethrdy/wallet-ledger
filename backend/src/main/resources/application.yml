@@ -37,6 +37,8 @@ app:
   default-currency: INR
   scheduling:
     enabled: true
+  http:
+    max-request-bytes: 65536   # 64 KiB; every legitimate body is far smaller
 
 idempotency:
   ttl: 24h
@@ -73,4 +75,24 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true          # /actuator/health/liveness and /readiness for orchestrators
+  metrics:
+    tags:
+      application: wallet-backend
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        wallet.ledger.lock.wait: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  default-produces-media-type: application/json
+  writer-with-order-by-keys: true

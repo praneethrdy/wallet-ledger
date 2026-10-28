@@ -1,0 +1,21 @@
+meta {
+  name: Reverse transaction
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/transactions/{{transactionId}}/reverse
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+body:json {
+  {
+    "reason": "Customer error, approved by ops"
+  }
+}

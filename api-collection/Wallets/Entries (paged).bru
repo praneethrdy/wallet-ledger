@@ -1,0 +1,19 @@
+meta {
+  name: Entries (paged)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/wallets/{{walletId}}/entries?limit=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:post-response {
+  bru.setVar("entriesCursor", res.body.nextCursor);
+}

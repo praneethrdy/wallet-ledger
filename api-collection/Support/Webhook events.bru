@@ -1,0 +1,15 @@
+meta {
+  name: Webhook events
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/support/webhook-events
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{supportToken}}
+}

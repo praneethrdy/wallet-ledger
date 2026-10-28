@@ -1,0 +1,19 @@
+docs {
+  Wallet & double-entry ledger API. Start the backend with the dev profile
+  (`docker compose up -d` then `cd backend && ./mvnw spring-boot:run`) so the seed users exist.
+
+  Run "Auth / Login" first (and "Auth / Login as admin" for the Admin folder).
+  Amounts are integers in minor units: 50000 = INR 500.00.
+}
+
+script:pre-request {
+  // Every mutating call except /auth and the webhook needs a fresh Idempotency-Key.
+  // To test a replay, copy a key from the Timeline and set it on the request manually.
+  const method = req.getMethod();
+  const url = req.getUrl();
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)
+      && !url.includes("/auth/") && !url.includes("/webhooks/") && !url.includes("/dev/")
+      && !req.getHeader("Idempotency-Key")) {
+    req.setHeader("Idempotency-Key", Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12));
+  }
+}

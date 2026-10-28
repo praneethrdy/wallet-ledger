@@ -1,0 +1,20 @@
+meta {
+  name: List wallets
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/wallets
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:post-response {
+  if (res.body.length > 0) bru.setVar("walletId", res.body[0].id);
+  if (res.body.length > 1) bru.setVar("otherWalletId", res.body[1].id);
+}
