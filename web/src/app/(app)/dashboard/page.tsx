@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
+import { Sparkline } from "@/components/charts/sparkline";
 import { Amount } from "@/components/ledger/amount";
 import { QuickActions } from "@/components/ledger/quick-actions";
 import { StatCard } from "@/components/ledger/stat-card";
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, get } from "@/lib/api/client";
+import { balanceSeries, walletShares, windowChange } from "@/lib/dashboard";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -47,6 +49,11 @@ async function Dashboard() {
   ]);
   const flowCurrency = summary.thisMonth.currency;
   const primary = summary.totals.find((t) => t.currency === flowCurrency) ?? summary.totals[0];
+  // The flows are in the default currency, so the history only applies when that's the headline total.
+  const history = primary?.currency === flowCurrency ? balanceSeries(primary.balance, summary.cashFlow30d) : [];
+  const shares = walletShares(wallets, flowCurrency);
+  // Colour dots and percentages only make sense next to the bar, which needs two or more wallets.
+  const shareIndex = new Map(shares.length > 1 ? shares.map((s, i) => [s.wallet.id, i]) : []);
 
   if (wallets.length === 0) {
     return (
@@ -76,19 +83,23 @@ async function Dashboard() {
             icon={<WalletIcon />}
             value={<AnimatedMoney minor={primary?.balance ?? 0} currency={primary?.currency ?? flowCurrency} />}
             hint={
-              summary.totals.length > 1 ? (
-                <span className="flex flex-wrap gap-x-3">
-                  {summary.totals
-                    .filter((t) => t !== primary)
-                    .map((t) => (
-                      <Amount key={t.currency} minor={t.balance} currency={t.currency} />
-                    ))}
-                </span>
-              ) : (
-                `Across ${wallets.length} wallet${wallets.length === 1 ? "" : "s"}`
-              )
+              <span className="flex flex-wrap gap-x-3">
+                {history.length > 0 && (
+                  <span>
+                    <Amount minor={windowChange(summary.cashFlow30d)} currency={flowCurrency} tone="signed" /> in 30
+                    days
+                  </span>
+                )}
+                {summary.totals.length > 1
+                  ? summary.totals
+                      .filter((t) => t !== primary)
+                      .map((t) => <Amount key={t.currency} minor={t.balance} currency={t.currency} />)
+                  : `Across ${wallets.length} wallet${wallets.length === 1 ? "" : "s"}`}
+              </span>
             }
-          />
+          >
+            {history.length > 1 && <Sparkline data={history} currency={flowCurrency} height={44} />}
+          </StatCard>
         </FadeIn>
         <FadeIn delay={0.04}>
           <StatCard
@@ -134,6 +145,21 @@ async function Dashboard() {
             </Link>
           </CardHeader>
           <CardContent className="space-y-1 px-2">
+            {shares.length > 1 && (
+              <div className="px-3 pb-3">
+                <div
+                  role="img"
+                  aria-label={`How your ${flowCurrency} balance is split: ${shares
+                    .map(({ wallet, share }) => `${wallet.name} ${percent(share)}`)
+                    .join(", ")}`}
+                  className="flex h-2 origin-left animate-grow-x gap-0.5 overflow-hidden rounded-full motion-reduce:animate-none"
+                >
+                  {shares.map(({ wallet, share }, i) => (
+                    <span key={wallet.id} className="min-w-1" style={{ flex: `${share} 1 0`, background: shade(i) }} />
+                  ))}
+                </div>
+              </div>
+            )}
             {wallets.map((w) => (
               <Link
                 key={w.id}
@@ -145,7 +171,17 @@ async function Dashboard() {
                     <span className="truncate text-sm font-medium">{w.name}</span>
                     {w.status !== "ACTIVE" && <StatusBadge value={w.status} />}
                   </span>
-                  <span className="text-xs text-muted-foreground">{w.currency}</span>
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {shareIndex.has(w.id) && (
+                      <span
+                        className="size-1.5 rounded-full"
+                        style={{ background: shade(shareIndex.get(w.id)!) }}
+                        aria-hidden
+                      />
+                    )}
+                    {w.currency}
+                    {shareIndex.has(w.id) && ` · ${percent(shares[shareIndex.get(w.id)!].share)}`}
+                  </span>
                 </span>
                 <Amount minor={w.balance} currency={w.currency} className="text-sm font-medium" />
               </Link>
@@ -179,6 +215,16 @@ async function Dashboard() {
       </Card>
     </div>
   );
+}
+
+/** Allocation colours: the accent, then lighter tints of it; anything past four is neutral. */
+function shade(i: number): string {
+  const mix = [100, 65, 40, 22][i];
+  return mix === undefined ? "var(--line-strong)" : `color-mix(in oklab, var(--brand) ${mix}%, var(--card))`;
+}
+
+function percent(share: number): string {
+  return share < 0.01 ? "<1%" : `${Math.round(share * 100)}%`;
 }
 
 function DashboardSkeleton() {
