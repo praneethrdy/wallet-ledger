@@ -9,9 +9,16 @@ import "./globals.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+const DESCRIPTION =
+  "A digital wallet on a double-entry ledger: idempotent transfers, signed webhooks, reversals instead of edits and an audited staff console.";
+
 export const metadata: Metadata = {
+  // Absolute base for the social preview image URLs (LinkedIn, WhatsApp, X need absolute links).
+  metadataBase: new URL(process.env.SITE_URL ?? "https://wallet-ledger-tb4t.onrender.com"),
   title: { default: "Wallet Ledger", template: "%s · Wallet Ledger" },
-  description: "A double-entry wallet: every rupee accounted for, twice.",
+  description: DESCRIPTION,
+  openGraph: { type: "website", siteName: "Wallet Ledger", title: "Wallet Ledger", description: DESCRIPTION },
+  twitter: { card: "summary_large_image", title: "Wallet Ledger", description: DESCRIPTION },
 };
 
 export const viewport: Viewport = {
