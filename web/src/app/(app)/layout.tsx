@@ -9,6 +9,7 @@ import { UserMenu } from "@/components/shell/user-menu";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireUser } from "@/lib/auth/current-user";
+import { env } from "@/lib/env";
 
 /**
  * Authenticated shell. The chrome is static; everything that depends on the session (role-aware
@@ -42,7 +43,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
 
 async function RoleNav() {
   const user = await requireUser();
-  return <NavLinks items={navFor(user.role)} />;
+  return <NavLinks items={navFor(user.role, { assistant: Boolean(env.assistant) })} />;
 }
 
 async function AccountMenu() {

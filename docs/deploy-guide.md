@@ -192,6 +192,34 @@ cd web && npm run test:e2e                        # needs the local backend runn
 
 ---
 
+## 5b. Optional: "Ask your wallet" (AI assistant)
+
+A chat page where customers ask questions about their own money. It works with any OpenAI-compatible
+API that supports tool calling. Google Gemini's free tier needs no credit card.
+
+1. Go to **aistudio.google.com** → **Get API key** → **Create API key**. Keep it in your private note.
+2. In AI Studio, pick a current **Flash** model that supports function calling and copy its exact
+   model id (for example `gemini-…-flash`). Model names change over time; use what AI Studio lists.
+3. Render → **frontend** service → Environment → add:
+   ```
+   LLM_API_KEY=YOUR-GEMINI-KEY
+   LLM_MODEL=YOUR-MODEL-ID
+   ASSISTANT_DAILY_LIMIT=20
+   ```
+   (`LLM_BASE_URL` can stay unset: it defaults to Gemini. For OpenRouter set
+   `LLM_BASE_URL=https://openrouter.ai/api/v1` and use a model id ending in `:free`; for xAI
+   `https://api.x.ai/v1`.)
+4. **Save, rebuild, and deploy.** Customers now see **Ask** in the top bar.
+5. Test: sign in as the demo customer → **Ask** → "How much did I spend this month?".
+
+Notes:
+- The key lives only on the frontend server; the browser never sees it.
+- Free tiers may use prompts to improve their models; the page tells users their question and the
+  matching transaction data go to the provider. Demo data is fake, so that's fine here.
+- The daily limit protects your free quota; it's per server process and resets on restart.
+
+---
+
 ## 6. Things to know about the free plan
 
 - **Cold starts:** after ~15 minutes without visitors, both services sleep. The next visit takes

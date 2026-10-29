@@ -4,7 +4,7 @@ import type { SessionUser } from "@/lib/session/data";
 export type NavItem = { href: string; label: string; also?: string[] };
 
 /** What each role sees in the top bar. Hiding is UX only; the backend enforces access. */
-export function navFor(role: SessionUser["role"]): NavItem[] {
+export function navFor(role: SessionUser["role"], options: { assistant?: boolean } = {}): NavItem[] {
   switch (role) {
     case "CUSTOMER":
       return [
@@ -13,6 +13,7 @@ export function navFor(role: SessionUser["role"]): NavItem[] {
         { href: "/transfer", label: "Transfer" },
         { href: "/deposit", label: "Add money" },
         { href: "/transactions", label: "Transactions" },
+        ...(options.assistant ? [{ href: "/assistant", label: "Ask" }] : []),
       ];
     case "ADMIN":
       return [

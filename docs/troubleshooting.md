@@ -105,6 +105,31 @@ to shared storage (e.g. Redis), see `web/src/lib/session/refresh.ts`.
 ### Changed `SESSION_SECRET` and everyone was signed out
 Expected: old cookies can't be decrypted with the new secret. Users just sign in again.
 
+### "Ask" doesn't appear in the top bar
+**Cause:** `LLM_API_KEY` or `LLM_MODEL` isn't set on the **frontend**, or you're signed in as staff
+(the assistant is for customers).
+**Fix:** set both on the frontend service and redeploy.
+
+### Assistant says "The AI service is busy right now (its free quota)"
+**Cause:** the provider returned HTTP 429: the free tier's per-minute or per-day quota is used up.
+**Fix:** wait a minute (per-minute limits) or until tomorrow (daily limits). Lower
+`ASSISTANT_DAILY_LIMIT`, switch to another free model/provider, or add billing.
+
+### Assistant says "The AI service isn't responding"
+**Cause:** wrong key, wrong model id, wrong `LLM_BASE_URL`, or the model doesn't support tool calling.
+The frontend log shows `Assistant: provider: Model returned HTTP <status>`
+(401/403 = key, 404 = model or URL, 400 = often tool calling unsupported).
+**Fix:** copy the model id exactly from the provider's console; pick a model that supports
+function/tool calling; check the base URL has no trailing path like `/chat/completions`.
+
+### Assistant answers but the numbers look wrong
+Totals come from `summarize_transactions`, computed in code. Check the period it used: the answer
+should mention it, and dates are India time. If the model ignored the tool and invented a number,
+try a stronger model; the system prompt forbids doing arithmetic itself.
+
+### "You've asked N questions today, the daily limit"
+Working as intended (`ASSISTANT_DAILY_LIMIT`, default 20). It resets at midnight IST or on restart.
+
 ---
 
 ## Local development

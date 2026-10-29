@@ -27,6 +27,7 @@ const AREAS: { prefix: string; roles: SessionUser["role"][] }[] = [
   { prefix: "/transactions", roles: ["CUSTOMER", "ADMIN"] },
   { prefix: "/transfer", roles: ["CUSTOMER"] },
   { prefix: "/deposit", roles: ["CUSTOMER"] },
+  { prefix: "/assistant", roles: ["CUSTOMER"] },
   { prefix: "/settings", roles: ["CUSTOMER", "SUPPORT", "ADMIN"] },
   { prefix: "/bff", roles: ["CUSTOMER", "SUPPORT", "ADMIN"] },
 ];

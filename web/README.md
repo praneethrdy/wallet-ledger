@@ -43,13 +43,16 @@ With `MOCK_PROVIDER_ENABLED=true`, the sign-in page lists the demo accounts:
 
 All server-side; nothing is `NEXT_PUBLIC_*`, so the browser never learns the backend URL or any secret.
 
-| Variable                                   | Purpose                                                                                                            | Default                 |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
-| `API_BASE_URL`                             | where the Spring backend listens                                                                                   | `http://localhost:8080` |
-| `SESSION_SECRET`                           | encrypts the session cookie; **at least 32 random characters** (the app refuses to start otherwise)                | none                    |
-| `MOCK_PROVIDER_ENABLED`                    | dev only: lists the seeded demo accounts on /login (and implies `DEMO_PAYMENTS_ENABLED`). **Unset in production.** | off                     |
-| `DEMO_PAYMENTS_ENABLED`                    | "Add money" completes with a labelled, simulated payment; the backend's switch of the same name must be on too     | off                     |
-| `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD` | optional public demo customer shown on /login; must match the backend's `BOOTSTRAP_DEMO_*`                         | unset                   |
+| Variable                                   | Purpose                                                                                                                                                        | Default                 |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `API_BASE_URL`                             | where the Spring backend listens                                                                                                                               | `http://localhost:8080` |
+| `SESSION_SECRET`                           | encrypts the session cookie; **at least 32 random characters** (the app refuses to start otherwise)                                                            | none                    |
+| `MOCK_PROVIDER_ENABLED`                    | dev only: lists the seeded demo accounts on /login (and implies `DEMO_PAYMENTS_ENABLED`). **Unset in production.**                                             | off                     |
+| `DEMO_PAYMENTS_ENABLED`                    | "Add money" completes with a labelled, simulated payment; the backend's switch of the same name must be on too                                                 | off                     |
+| `LLM_API_KEY` / `LLM_MODEL`                | "Ask your wallet": key and model for an OpenAI-compatible chat API; the feature is hidden unless both are set                                                  | unset                   |
+| `LLM_BASE_URL`                             | the provider: Gemini (default) `https://generativelanguage.googleapis.com/v1beta/openai`, OpenRouter `https://openrouter.ai/api/v1`, xAI `https://api.x.ai/v1` | Gemini                  |
+| `ASSISTANT_DAILY_LIMIT`                    | questions per customer per day (in memory, per server process)                                                                                                 | `20`                    |
+| `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD` | optional public demo customer shown on /login; must match the backend's `BOOTSTRAP_DEMO_*`                                                                     | unset                   |
 
 ## Scripts
 
@@ -90,12 +93,22 @@ flowchart LR
 
 **Contract.** Types come from the backend's OpenAPI document (`npm run gen:api`); CI fails if they drift.
 
+**"Ask your wallet" (LLM).** A customer chat page (`/assistant`) that answers questions about the user's own
+money with tool calling (`src/lib/assistant/`). The model can only call three **read-only** tools
+(`list_wallets`, `summarize_transactions`, `search_transactions`), and the tools call the backend with the user's
+own token, so it can't see other people's data or move money. Totals are computed in code, in integer minor
+units: the model quotes them, it never adds up amounts itself. Transaction notes are written by other users,
+so they reach the model as fields named `untrustedNote`, which the system prompt says never to follow; answers
+render as plain text. Each question is capped (500 characters, 5 tool rounds) and each customer gets a daily
+limit. The key stays on the server. Provider-neutral: any OpenAI-compatible API with tool calling (Gemini,
+OpenRouter, xAI).
+
 ## Screens
 
 | Area            | Routes                                                                                                                                                                     |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public          | `/login`, `/register`, `/design` (style guide)                                                                                                                             |
-| Customer        | `/dashboard`, `/wallets`, `/wallets/[id]`, `/transfer`, `/deposit`, `/transactions`, `/transactions/[id]`, `/settings`                                                     |
+| Customer        | `/dashboard`, `/wallets`, `/wallets/[id]`, `/transfer`, `/deposit`, `/transactions`, `/transactions/[id]`, `/settings`, `/assistant`                                       |
 | Support + admin | `/support/users`, `/support/users/[id]`, `/support/transactions`, `/support/transactions/[id]`, `/support/webhook-events`, `/admin/reconciliation` (read-only for support) |
 | Admin           | `/admin`, `/admin/wallets`, `/admin/transactions/[id]/reverse`, "Run now" on reconciliation                                                                                |
 
