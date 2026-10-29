@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 import { ProductPreview } from "./product-preview";
+import { ProofRibbon } from "./proof-ribbon";
 import { Reveal } from "./reveal";
 
 const REPO = "https://github.com/praneethrdy/wallet-ledger";
@@ -30,7 +31,7 @@ export function LandingPage() {
       <TopBar />
       <main>
         <Hero />
-        <Proof />
+        <ProofRibbon />
         <Features />
         <HowMoneyMoves />
         <ApiExample />
@@ -120,28 +121,6 @@ function Hero() {
           <ProductPreview />
         </FadeIn>
       </div>
-    </section>
-  );
-}
-
-function Proof() {
-  const facts = [
-    ["234", "backend tests on real PostgreSQL"],
-    ["26", "end-to-end browser tests"],
-    ["0", "ways to edit history"],
-    ["WCAG AA", "contrast, light and dark"],
-  ];
-  return (
-    <section aria-label="In numbers" className="border-y border-border bg-card/50">
-      <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-y-6 px-4 py-8 sm:px-6 md:grid-cols-4">
-        {facts.map(([value, label]) => (
-          <div key={label} className="text-center">
-            <dt className="sr-only">{label}</dt>
-            <dd className="num text-2xl font-medium tracking-tight">{value}</dd>
-            <dd className="mt-1 text-xs text-muted-foreground">{label}</dd>
-          </div>
-        ))}
-      </dl>
     </section>
   );
 }

@@ -183,6 +183,28 @@
   --shadow-lg: var(--elev-lg);
 
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  /* Landing page: the facts ribbon glides left to right; numbers catch a passing light. */
+  --animate-marquee-ltr: marquee-ltr 48s linear infinite;
+  --animate-shine: shine 6s ease-in-out infinite;
+}
+
+@keyframes marquee-ltr {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes shine {
+  0%,
+  35% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
 }
 
 @keyframes shimmer {
