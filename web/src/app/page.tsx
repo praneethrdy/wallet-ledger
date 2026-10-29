@@ -1,9 +1,14 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
-/**
- * The proxy routes "/" before this renders: signed-in users go to their home area, everyone
- * else to /login (a marketing landing page may replace this later, step 11).
- */
+import { LandingPage } from "@/components/landing/landing-page";
+
+export const metadata: Metadata = {
+  title: "Wallet Ledger: money that always adds up",
+  description:
+    "A digital wallet on a double-entry ledger: idempotent transfers, signed webhooks, reversals instead of edits and an audited staff console. Java 21, Spring Boot, PostgreSQL, Next.js.",
+};
+
+/** Signed-out visitors land here; the proxy sends signed-in users straight to their home area. */
 export default function Home() {
-  redirect("/login");
+  return <LandingPage />;
 }

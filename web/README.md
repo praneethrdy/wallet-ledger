@@ -108,7 +108,7 @@ OpenRouter, xAI).
 
 | Area            | Routes                                                                                                                                                                     |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public          | `/login`, `/register`, `/design` (style guide)                                                                                                                             |
+| Public          | `/` (landing page), `/login`, `/register`, `/design` (style guide)                                                                                                         |
 | Customer        | `/dashboard`, `/wallets`, `/wallets/[id]`, `/transfer`, `/deposit`, `/transactions`, `/transactions/[id]`, `/settings`, `/assistant`                                       |
 | Support + admin | `/support/users`, `/support/users/[id]`, `/support/transactions`, `/support/transactions/[id]`, `/support/webhook-events`, `/admin/reconciliation` (read-only for support) |
 | Admin           | `/admin`, `/admin/wallets`, `/admin/transactions/[id]/reverse`, "Run now" on reconciliation                                                                                |

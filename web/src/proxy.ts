@@ -77,7 +77,7 @@ export async function proxy(request: NextRequest) {
 
 function decide(pathname: string, search: string, session: SessionData | null, ended: boolean): string | null {
   if (pathname === "/") {
-    return session ? homeFor(session.user.role) : "/login";
+    return session ? homeFor(session.user.role) : null; // signed out: the public landing page
   }
   if (PUBLIC_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     if (session && (pathname === "/login" || pathname === "/register")) return homeFor(session.user.role);

@@ -17,7 +17,7 @@ async function audit(page: Page, path: string) {
 }
 
 const PAGES: [Who | null, string[]][] = [
-  [null, ["/login", "/register"]],
+  [null, ["/", "/login", "/register"]],
   ["alice", ["/dashboard", "/wallets", "/transfer", "/deposit", "/transactions", "/settings"]],
   ["admin", ["/admin", "/admin/wallets", "/admin/reconciliation", "/support/transactions", "/support/webhook-events"]],
   ["support", ["/support/users"]],
