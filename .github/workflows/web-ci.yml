@@ -1,0 +1,60 @@
+name: web-ci
+
+on:
+  push:
+    paths: ["web/**", "backend/openapi.json", ".github/workflows/web-ci.yml"]
+  pull_request:
+    paths: ["web/**", "backend/openapi.json", ".github/workflows/web-ci.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # The build imports server config, which insists on a 32+ char secret. Not a real one:
+      # CI never serves traffic.
+      SESSION_SECRET: ci-placeholder-session-secret-not-used-for-anything
+      API_BASE_URL: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # The UI's types come from the backend's OpenAPI contract. If someone changed the API
+      # (backend/openapi.json) without regenerating, this fails instead of the app at runtime.
+      - name: Generated API types match the contract
+        run: |
+          npm run gen:api
+          git diff --exit-code src/lib/api/schema.d.ts
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  # End-to-end tests (web/e2e) need Postgres, the backend in its dev profile (seeded users and
+  # the mock payment provider) and a production build of the web app. They take ~3 minutes
+  # locally; they're run before each release rather than on every push. See web/README.md.

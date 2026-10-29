@@ -15,6 +15,12 @@ A wallet backend where every money movement is a balanced pair of ledger entries
 - **Nightly reconciliation** on a consistent snapshot, which catches deliberately injected corruption.
 - **210+ tests** against real Postgres, no H2 and no mocked database.
 
+**Frontend:** a Next.js app in [`web/`](web/README.md): a customer app and an audited staff console that talk to this API through a backend-for-frontend, so the browser never holds a token.
+
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard-light.png) | ![Admin overview](docs/screenshots/admin-overview-dark.png) |
+
 ## Architecture
 
 ```mermaid
@@ -245,6 +251,7 @@ Created on startup in the `dev` profile only (`DevDataSeeder`), along with two f
 
 ## Documentation
 
+- [web/README.md](web/README.md): the frontend: setup, architecture (BFF, token refresh, idempotency) and tests.
 - [docs/decisions.md](docs/decisions.md): 17 architecture decision records.
 - [docs/ledger-design.md](docs/ledger-design.md): the data model, sign convention and invariants.
 - [docs/deployment.md](docs/deployment.md): managed Postgres, secrets, ShedLock, network and alerts.
