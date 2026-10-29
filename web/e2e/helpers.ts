@@ -24,11 +24,12 @@ export async function signIn(page: Page, who: Who) {
   await page.waitForURL((u) => !u.pathname.startsWith("/login"));
 }
 
-const tokens = new Map<Who, string>();
+// Short-lived on purpose: the refresh test runs the backend with a 75s access-token TTL.
+const tokens = new Map<Who, { token: string; at: number }>();
 
 async function token(who: Who): Promise<string> {
   const cached = tokens.get(who);
-  if (cached) return cached;
+  if (cached && Date.now() - cached.at < 30_000) return cached.token;
   const res = await fetch(`${API}/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -36,7 +37,7 @@ async function token(who: Who): Promise<string> {
   });
   expect(res.ok, `API login as ${who}`).toBe(true);
   const t = ((await res.json()) as { accessToken: string }).accessToken;
-  tokens.set(who, t);
+  tokens.set(who, { token: t, at: Date.now() });
   return t;
 }
 

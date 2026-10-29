@@ -78,9 +78,12 @@ export function LoginForm({ demoAccounts }: { demoAccounts?: DemoAccount[] }) {
           <div className="mb-3 flex items-center gap-2">
             <FlaskConicalIcon className="size-3.5 text-muted-foreground" aria-hidden />
             <h2 id="demo-heading" className="eyebrow">
-              Demo accounts · dev only
+              {demoAccounts.length === 1 ? "Try it without signing up" : "Demo accounts · dev only"}
             </h2>
           </div>
+          {demoAccounts.length === 1 && (
+            <p className="-mt-1 mb-3 text-xs text-muted-foreground">A shared demo customer. No real money moves.</p>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {demoAccounts.map((account) => (
               <button

@@ -18,6 +18,15 @@ webhook:
     secret: ${WEBHOOK_SECRET}
     previous-secret: ${WEBHOOK_PREVIOUS_SECRET:}
 
+# First admin and an optional public demo customer, created once if missing (AccountBootstrap).
+bootstrap:
+  admin:
+    email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+  demo:
+    email: ${BOOTSTRAP_DEMO_EMAIL:}
+    password: ${BOOTSTRAP_DEMO_PASSWORD:}
+
 server:
   # Behind a TLS-terminating proxy: trust X-Forwarded-* so request.getRemoteAddr() is the client.
   # Only safe when the app is reachable exclusively through that proxy (docs/deployment.md).

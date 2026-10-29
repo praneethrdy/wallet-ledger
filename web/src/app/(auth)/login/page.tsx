@@ -22,7 +22,13 @@ export default function LoginPage() {
       <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
       <p className="mt-1.5 text-sm text-muted-foreground">Sign in to your wallet.</p>
       <Suspense fallback={<FormSkeleton />}>
-        <LoginForm demoAccounts={env.mockProviderEnabled ? DEMO_ACCOUNTS : undefined} />
+        <LoginForm
+          demoAccounts={
+            env.mockProviderEnabled
+              ? DEMO_ACCOUNTS
+              : env.demoLogin && [{ label: "Demo", role: "Customer", ...env.demoLogin }]
+          }
+        />
       </Suspense>
     </>
   );
