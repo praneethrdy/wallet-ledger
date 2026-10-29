@@ -43,16 +43,17 @@ With `MOCK_PROVIDER_ENABLED=true`, the sign-in page lists the demo accounts:
 
 All server-side; nothing is `NEXT_PUBLIC_*`, so the browser never learns the backend URL or any secret.
 
-| Variable                                   | Purpose                                                                                                                                                        | Default                 |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `API_BASE_URL`                             | where the Spring backend listens                                                                                                                               | `http://localhost:8080` |
-| `SESSION_SECRET`                           | encrypts the session cookie; **at least 32 random characters** (the app refuses to start otherwise)                                                            | none                    |
-| `MOCK_PROVIDER_ENABLED`                    | dev only: lists the seeded demo accounts on /login (and implies `DEMO_PAYMENTS_ENABLED`). **Unset in production.**                                             | off                     |
-| `DEMO_PAYMENTS_ENABLED`                    | "Add money" completes with a labelled, simulated payment; the backend's switch of the same name must be on too                                                 | off                     |
-| `LLM_API_KEY` / `LLM_MODEL`                | "Ask your wallet": key and model for an OpenAI-compatible chat API; the feature is hidden unless both are set                                                  | unset                   |
-| `LLM_BASE_URL`                             | the provider: Gemini (default) `https://generativelanguage.googleapis.com/v1beta/openai`, OpenRouter `https://openrouter.ai/api/v1`, xAI `https://api.x.ai/v1` | Gemini                  |
-| `ASSISTANT_DAILY_LIMIT`                    | questions per customer per day (in memory, per server process)                                                                                                 | `20`                    |
-| `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD` | optional public demo customer shown on /login; must match the backend's `BOOTSTRAP_DEMO_*`                                                                     | unset                   |
+| Variable                                      | Purpose                                                                                                                                                        | Default                 |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `API_BASE_URL`                                | where the Spring backend listens                                                                                                                               | `http://localhost:8080` |
+| `SESSION_SECRET`                              | encrypts the session cookie; **at least 32 random characters** (the app refuses to start otherwise)                                                            | none                    |
+| `MOCK_PROVIDER_ENABLED`                       | dev only: lists the seeded demo accounts on /login (and implies `DEMO_PAYMENTS_ENABLED`). **Unset in production.**                                             | off                     |
+| `DEMO_PAYMENTS_ENABLED`                       | "Add money" completes with a labelled, simulated payment; the backend's switch of the same name must be on too                                                 | off                     |
+| `LLM_API_KEY` / `LLM_MODEL`                   | "Ask your wallet": key and model for an OpenAI-compatible chat API; the feature is hidden unless both are set                                                  | unset                   |
+| `LLM_BASE_URL`                                | the provider: Gemini (default) `https://generativelanguage.googleapis.com/v1beta/openai`, OpenRouter `https://openrouter.ai/api/v1`, xAI `https://api.x.ai/v1` | Gemini                  |
+| `LLM_FALLBACK_API_KEY` / `LLM_FALLBACK_MODEL` | optional backup provider when the main one fails (overloaded, quota, timeout); `LLM_FALLBACK_BASE_URL` defaults to OpenRouter                                  | unset                   |
+| `ASSISTANT_DAILY_LIMIT`                       | questions per customer per day (in memory, per server process)                                                                                                 | `20`                    |
+| `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD`    | optional public demo customer shown on /login; must match the backend's `BOOTSTRAP_DEMO_*`                                                                     | unset                   |
 
 ## Scripts
 

@@ -115,6 +115,13 @@ Expected: old cookies can't be decrypted with the new secret. Users just sign in
 **Fix:** wait a minute (per-minute limits) or until tomorrow (daily limits). Lower
 `ASSISTANT_DAILY_LIMIT`, switch to another free model/provider, or add billing.
 
+### Assistant fails and the log says `Model returned HTTP 503` (happened)
+**Cause:** the provider is overloaded (Gemini's free Flash models at busy times). Not a problem with
+the key, model id or request.
+**Fix:** wait a few minutes; or switch `LLM_MODEL` to a lighter model (e.g. a Flash-Lite id); or set
+a backup provider (`LLM_FALLBACK_API_KEY` / `LLM_FALLBACK_MODEL`, OpenRouter by default), which is
+used automatically when the main provider fails.
+
 ### Assistant says "The AI service isn't responding"
 **Cause:** wrong key, wrong model id, wrong `LLM_BASE_URL`, or the model doesn't support tool calling.
 The frontend log shows `Assistant: provider: Model returned HTTP <status>`

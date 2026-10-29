@@ -212,8 +212,18 @@ API that supports tool calling. Google Gemini's free tier needs no credit card.
 4. **Save, rebuild, and deploy.** Customers now see **Ask** in the top bar.
 5. Test: sign in as the demo customer → **Ask** → "How much did I spend this month?".
 
+6. Optional, recommended: a **backup provider** for when Gemini is overloaded (HTTP 503) or out of
+   free quota. Sign up at **openrouter.ai** → **Keys** → **Create key**. In **Models**, filter by
+   "free" and "tools", and copy a model id ending in `:free`. Then add to the frontend:
+   ```
+   LLM_FALLBACK_API_KEY=YOUR-OPENROUTER-KEY
+   LLM_FALLBACK_MODEL=YOUR-FREE-MODEL-ID
+   ```
+   (`LLM_FALLBACK_BASE_URL` defaults to OpenRouter.) The same question is retried once on the backup;
+   the log says `Assistant: Google Gemini failed (...); using OpenRouter`.
+
 Notes:
-- The key lives only on the frontend server; the browser never sees it.
+- The keys live only on the frontend server; the browser never sees them.
 - Free tiers may use prompts to improve their models; the page tells users their question and the
   matching transaction data go to the provider. Demo data is fake, so that's fine here.
 - The daily limit protects your free quota; it's per server process and resets on restart.
