@@ -271,6 +271,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/deposits/{id}/demo-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Demo only: complete your own pending deposit with a simulated payment (404 unless payments.demo.enabled). Settles through the normal signed-webhook path. */
+        post: operations["complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -585,6 +602,10 @@ export interface components {
             recentTransactions: components["schemas"]["TransactionSummary"][];
             thisMonth: components["schemas"]["Flow"];
             totals: components["schemas"]["CurrencyTotal"][];
+        };
+        DemoPaymentRequest: {
+            /** @enum {string} */
+            outcome: "SUCCESS" | "FAILURE";
         };
         DepositResponse: {
             /** Format: int64 */
@@ -2010,6 +2031,107 @@ export interface operations {
             };
             /** @description Request body too large (PAYLOAD_TOO_LARGE) */
             413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unexpected error (INTERNAL_ERROR); quote the correlationId */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    complete: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per intended operation (a UUID). Retrying with the same key and body replays the original response with header Idempotent-Replayed: true. Remembered for 24h. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemoPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositResponse"];
+                };
+            };
+            /** @description Validation failed / malformed request (VALIDATION_FAILED, IDEMPOTENCY_KEY_REQUIRED) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (UNAUTHORIZED) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Role not allowed (FORBIDDEN) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not yours (NOT_FOUND) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Same Idempotency-Key still in progress (IDEMPOTENCY_REQUEST_IN_PROGRESS) or conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Request body too large (PAYLOAD_TOO_LARGE) */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Business rule refused it, or Idempotency-Key reused with a different body */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

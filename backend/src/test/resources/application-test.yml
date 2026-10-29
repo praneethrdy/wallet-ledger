@@ -26,3 +26,7 @@ webhook:
   payment-provider:
     secret: test-webhook-secret
     previous-secret: test-webhook-secret-old
+
+payments:
+  demo:
+    enabled: true

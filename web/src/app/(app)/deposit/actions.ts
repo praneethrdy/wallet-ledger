@@ -58,30 +58,25 @@ export async function createDeposit(form: FormData): Promise<ActionResult<Schema
 }
 
 /**
- * DEV ONLY: plays the payment provider for one of the caller's deposits. The backend's mock
- * endpoint signs a webhook and delivers it to itself, so the real verification path runs.
- * The deposit is first read with the caller's token: you can only "pay" your own deposits.
+ * Demo only: completes the caller's own pending deposit with a simulated payment. The backend
+ * signs a provider event and runs it through the normal webhook pipeline, and it answers 404
+ * unless its demo switch (DEMO_PAYMENTS_ENABLED) is on.
  */
-export async function completeMockPayment(
-  depositId: string,
-  outcome: "success" | "failure",
-): Promise<ActionResult<null>> {
-  if (!env.mockProviderEnabled || !isUuid(depositId)) {
+export async function completeDemoPayment(form: FormData): Promise<ActionResult<Schemas["DepositResponse"]>> {
+  const depositId = String(form.get("depositId") ?? "");
+  const outcome = form.get("outcome") === "FAILURE" ? "FAILURE" : "SUCCESS";
+  if (!env.demoPaymentsEnabled || !isUuid(depositId)) {
     return { ok: false, error: toActionError(new ApiError(404, { code: "NOT_FOUND" })) };
   }
   try {
     const client = await api();
-    const { data: deposit } = await unwrap(
-      client.GET("/api/v1/deposits/{id}", { params: { path: { id: depositId } } }),
+    const { data, replayed } = await unwrap(
+      client.POST("/api/v1/deposits/{id}/demo-payment", {
+        params: { header: idempotencyHeader(form), path: { id: depositId } },
+        body: { outcome },
+      }),
     );
-    if (deposit.status !== "PENDING") return { ok: true, data: null }; // already settled: nothing to do
-
-    const res = await fetch(
-      `${env.apiBaseUrl}/dev/mock-provider/deposits/${encodeURIComponent(deposit.providerReference)}/complete?outcome=${outcome}`,
-      { method: "POST", cache: "no-store" },
-    );
-    if (!res.ok) throw new ApiError(res.status, undefined);
-    return { ok: true, data: null };
+    return { ok: true, data, replayed };
   } catch (err) {
     return { ok: false, error: toActionError(err) };
   }

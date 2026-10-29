@@ -18,6 +18,11 @@ webhook:
     secret: ${WEBHOOK_SECRET}
     previous-secret: ${WEBHOOK_PREVIOUS_SECRET:}
 
+# Public demo only: customers may complete their own deposits with a simulated payment.
+payments:
+  demo:
+    enabled: ${DEMO_PAYMENTS_ENABLED:false}
+
 # First admin and an optional public demo customer, created once if missing (AccountBootstrap).
 bootstrap:
   admin:

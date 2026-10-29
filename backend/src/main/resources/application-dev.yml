@@ -19,3 +19,7 @@ webhook:
     # DEV ONLY. scripts/sign-webhook.sh uses the same default.
     secret: ${WEBHOOK_SECRET:dev-webhook-secret-change-me}
     previous-secret: ${WEBHOOK_PREVIOUS_SECRET:}
+
+payments:
+  demo:
+    enabled: true   # "Add money" completes with a simulated payment

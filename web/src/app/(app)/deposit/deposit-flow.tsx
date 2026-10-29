@@ -24,7 +24,7 @@ import { formatDateTime } from "@/lib/format";
 import { useIdempotencyKey } from "@/lib/idempotency";
 import { formatMoney, minorDigits, moneyParseMessage, parseMoney, toDecimalString } from "@/lib/money";
 
-import { completeMockPayment, createDeposit } from "./actions";
+import { completeDemoPayment, createDeposit } from "./actions";
 
 type Wallet = Schemas["WalletResponse"];
 type Deposit = Schemas["DepositResponse"];
@@ -38,13 +38,13 @@ export function DepositFlow({
   allWallets,
   initialWallet,
   initialDeposit,
-  mockProvider,
+  demoPayments,
 }: {
   wallets: Wallet[];
   allWallets: Wallet[];
   initialWallet: string | undefined;
   initialDeposit: Deposit | undefined;
-  mockProvider: boolean;
+  demoPayments: boolean;
 }) {
   const reduce = useReducedMotion();
   const [deposit, setDeposit] = useState(initialDeposit);
@@ -80,7 +80,7 @@ export function DepositFlow({
               <DepositStatus
                 initial={deposit}
                 wallet={allWallets.find((w) => w.id === deposit.walletId)}
-                mockProvider={mockProvider}
+                demoPayments={demoPayments}
                 onNew={startOver}
               />
             </motion.div>
@@ -244,18 +244,19 @@ function DepositForm({
 function DepositStatus({
   initial,
   wallet,
-  mockProvider,
+  demoPayments,
   onNew,
 }: {
   initial: Deposit;
   wallet: Wallet | undefined;
-  mockProvider: boolean;
+  demoPayments: boolean;
   onNew: (from: Deposit) => void;
 }) {
   const router = useRouter();
   const [roundStart, setRoundStart] = useState(() => Date.now());
   const [paying, startPaying] = useTransition();
   const [payError, setPayError] = useState<ActionError>();
+  const payKey = useIdempotencyKey();
 
   const query = useQuery({
     queryKey: ["deposit", initial.id],
@@ -280,10 +281,15 @@ function DepositStatus({
     }
   }, [deposit.status, router]);
 
-  function pay(outcome: "success" | "failure") {
+  function pay(outcome: "SUCCESS" | "FAILURE") {
     setPayError(undefined);
+    const form = new FormData();
+    form.set("depositId", deposit.id);
+    form.set("outcome", outcome);
+    form.set("idempotencyKey", payKey.get());
     startPaying(async () => {
-      const res = await completeMockPayment(deposit.id, outcome);
+      const res = await completeDemoPayment(form);
+      if (res.ok || res.error.code !== "INTERNAL_ERROR") payKey.reset();
       if (!res.ok) setPayError(res.error);
       await query.refetch();
     });
@@ -339,21 +345,21 @@ function DepositStatus({
         />
       </ol>
 
-      {!settled && mockProvider && (
+      {!settled && demoPayments && (
         <div className="relative overflow-hidden rounded-xl border border-dashed border-line-strong p-6">
           <p className="flex items-center gap-1.5 eyebrow">
-            <CreditCardIcon className="size-3.5" /> Test payment provider · dev only
+            <CreditCardIcon className="size-3.5" /> Demo payment · simulated, no real money
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Stands in for the provider’s checkout. Your choice is sent to the backend as a signed webhook, exactly like
-            the real thing.
+            This demo has no real payment provider. Choose how the payment ends: it’s sent to the backend as a signed
+            provider webhook and settles exactly like a real one.
           </p>
           <FormError error={payError} />
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button onClick={() => pay("success")} loading={paying}>
+            <Button onClick={() => pay("SUCCESS")} loading={paying}>
               Pay {amount}
             </Button>
-            <Button variant="outline" onClick={() => pay("failure")} disabled={paying}>
+            <Button variant="outline" onClick={() => pay("FAILURE")} disabled={paying}>
               Fail payment
             </Button>
           </div>

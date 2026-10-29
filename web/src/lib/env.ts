@@ -14,6 +14,8 @@ function read() {
     apiBaseUrl,
     sessionSecret,
     mockProviderEnabled: process.env.MOCK_PROVIDER_ENABLED === "true",
+    // "Add money" completes with a simulated payment (the backend's DEMO_PAYMENTS_ENABLED must match).
+    demoPaymentsEnabled: process.env.DEMO_PAYMENTS_ENABLED === "true" || process.env.MOCK_PROVIDER_ENABLED === "true",
     // A public demo customer (production), shown on /login so visitors needn't register.
     demoLogin:
       process.env.DEMO_LOGIN_EMAIL && process.env.DEMO_LOGIN_PASSWORD

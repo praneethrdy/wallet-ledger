@@ -73,7 +73,7 @@ async function Deposit({ searchParams }: { searchParams: PageProps<"/deposit">["
       allWallets={wallets}
       initialWallet={typeof wallet === "string" && usable.some((w) => w.id === wallet) ? wallet : usable[0]?.id}
       initialDeposit={deposit}
-      mockProvider={env.mockProviderEnabled}
+      demoPayments={env.demoPaymentsEnabled}
     />
   );
 }

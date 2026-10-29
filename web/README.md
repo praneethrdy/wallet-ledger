@@ -43,11 +43,13 @@ With `MOCK_PROVIDER_ENABLED=true`, the sign-in page lists the demo accounts:
 
 All server-side; nothing is `NEXT_PUBLIC_*`, so the browser never learns the backend URL or any secret.
 
-| Variable                | Purpose                                                                                             | Default                 |
-| ----------------------- | --------------------------------------------------------------------------------------------------- | ----------------------- |
-| `API_BASE_URL`          | where the Spring backend listens                                                                    | `http://localhost:8080` |
-| `SESSION_SECRET`        | encrypts the session cookie; **at least 32 random characters** (the app refuses to start otherwise) | none                    |
-| `MOCK_PROVIDER_ENABLED` | dev only: the test checkout on /deposit and the demo accounts on /login. **Unset in production.**   | off                     |
+| Variable                                   | Purpose                                                                                                            | Default                 |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| `API_BASE_URL`                             | where the Spring backend listens                                                                                   | `http://localhost:8080` |
+| `SESSION_SECRET`                           | encrypts the session cookie; **at least 32 random characters** (the app refuses to start otherwise)                | none                    |
+| `MOCK_PROVIDER_ENABLED`                    | dev only: lists the seeded demo accounts on /login (and implies `DEMO_PAYMENTS_ENABLED`). **Unset in production.** | off                     |
+| `DEMO_PAYMENTS_ENABLED`                    | "Add money" completes with a labelled, simulated payment; the backend's switch of the same name must be on too     | off                     |
+| `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD` | optional public demo customer shown on /login; must match the backend's `BOOTSTRAP_DEMO_*`                         | unset                   |
 
 ## Scripts
 

@@ -231,6 +231,9 @@ Created on startup in the `dev` profile only (`DevDataSeeder`), along with two f
 | `JWT_SECRET` | base64 HMAC key for access tokens (≥ 32 bytes); **required in prod** | built-in dev value |
 | `WEBHOOK_SECRET` / `WEBHOOK_PREVIOUS_SECRET` | payment-provider signing secret(s); **required in prod** | `dev-webhook-secret-change-me` |
 | `DB_URL`, `DB_APP_*`, `DB_OWNER_*` | database (prod) | compose defaults, see [.env.example](.env.example) |
+| `DEMO_PAYMENTS_ENABLED` | public demo: customers complete their own deposits with a simulated, signed provider event (`POST /deposits/{id}/demo-payment`); off = 404 | on in dev, **off in prod** |
+| `BOOTSTRAP_ADMIN_EMAIL` / `_PASSWORD` | prod: creates the first admin once, if missing (never changes an existing user) | unset |
+| `BOOTSTRAP_DEMO_EMAIL` / `_PASSWORD` | prod: optional public demo customer with an empty INR wallet | unset |
 
 ## Database roles
 
