@@ -33,6 +33,7 @@
   --danger-text: #be123c;
   --warning: #f59e0b;
   --warning-text: #b45309;
+  --brand-text: #4338ca; /* accent-coloured text on tints (AA at small sizes) */
 
   /* elevation: hairline + soft, layered, low-opacity shadows */
   --elev-xs: 0 1px 2px rgb(9 9 11 / 0.04);
@@ -78,8 +79,10 @@
   --line-strong: #3f3f46;
   --text: #fafafa;
   --text-muted: #a1a1aa;
-  --brand: #7c7cf0;
-  --brand-hover: #8e8ef3;
+  --brand: #7c7cf0; /* accents, links, rings: bright enough on the dark canvas */
+  /* Filled buttons keep the deeper fill: white on #7c7cf0 is only ~3.3:1, on #5b5bd6 ~5.4:1 (WCAG AA). */
+  --brand-fill: #5b5bd6;
+  --brand-hover: #6363db;
   --brand-contrast: #ffffff;
   --credit: #10b981;
   --credit-text: #34d399;
@@ -87,6 +90,7 @@
   --danger-text: #fb7185;
   --warning: #f59e0b;
   --warning-text: #fbbf24;
+  --brand-text: #a5a5f6;
 
   /* in the dark, depth comes from a faint top highlight plus deeper shadow */
   --elev-xs: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -103,7 +107,7 @@
   --card-foreground: var(--text);
   --popover: var(--surface);
   --popover-foreground: var(--text);
-  --primary: var(--brand);
+  --primary: var(--brand-fill);
   --primary-foreground: var(--brand-contrast);
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text);
@@ -164,6 +168,7 @@
   --color-danger-text: var(--danger-text);
   --color-warning: var(--warning);
   --color-warning-text: var(--warning-text);
+  --color-brand-text: var(--brand-text);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);

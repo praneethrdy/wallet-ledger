@@ -10,7 +10,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         neutral: "bg-[color-mix(in_oklab,var(--text)_7%,transparent)] text-foreground",
-        brand: "bg-[color-mix(in_oklab,var(--brand)_12%,transparent)] text-brand",
+        brand: "bg-[color-mix(in_oklab,var(--brand)_12%,transparent)] text-brand-text",
         success: "bg-[color-mix(in_oklab,var(--credit)_12%,transparent)] text-credit-text",
         warning: "bg-[color-mix(in_oklab,var(--warning)_14%,transparent)] text-warning-text",
         danger: "bg-[color-mix(in_oklab,var(--danger)_12%,transparent)] text-danger-text",

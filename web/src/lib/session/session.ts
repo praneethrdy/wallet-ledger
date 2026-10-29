@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { cache } from "react";
 
 import { env } from "@/lib/env";
@@ -14,6 +15,9 @@ import { SESSION_COOKIE, seal, sessionCookieOptions, unseal, type SessionData } 
  */
 export const getSession = cache(async (): Promise<SessionData | null> => {
   const jar = await cookies();
+  // Unsealing checks the seal's expiry against Date.now(); mark this as request-time work so
+  // Next's prerender pass doesn't flag the clock read (blocking-prerender-current-time).
+  await connection();
   return unseal(jar.get(SESSION_COOKIE)?.value, env.sessionSecret);
 });
 

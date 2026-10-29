@@ -355,7 +355,7 @@ function Steps({ step }: { step: Step }) {
           <span
             className={
               i <= current
-                ? "grid size-6 place-items-center rounded-full bg-brand text-xs font-medium text-white"
+                ? "grid size-6 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground"
                 : "grid size-6 place-items-center rounded-full border border-border text-xs text-muted-foreground"
             }
           >
