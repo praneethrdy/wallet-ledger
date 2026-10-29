@@ -34,6 +34,28 @@ export class AssistantError extends Error {
   }
 }
 
+/**
+ * Tries {@code primary}; if it fails for any provider reason (overloaded, quota, timeout, error),
+ * asks {@code fallback} instead. Both speak the same OpenAI-compatible format, so the conversation
+ * (including earlier tool calls) carries over unchanged. Programming errors are not caught.
+ */
+export function withFallback(
+  primary: ChatFn,
+  fallback: ChatFn | undefined,
+  onFallback?: (error: AssistantError) => void,
+): ChatFn {
+  if (!fallback) return primary;
+  return async (messages, tools) => {
+    try {
+      return await primary(messages, tools);
+    } catch (err) {
+      if (!(err instanceof AssistantError)) throw err;
+      onFallback?.(err);
+      return fallback(messages, tools);
+    }
+  };
+}
+
 export function openAiCompatibleChat(config: LlmConfig, fetchImpl: typeof fetch = fetch): ChatFn {
   const url = `${config.baseUrl.replace(/\/+$/, "")}/chat/completions`;
   return async (messages, tools) => {

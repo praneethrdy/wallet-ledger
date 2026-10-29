@@ -5,7 +5,7 @@ import { z } from "zod";
 import { api, get } from "@/lib/api/client";
 import { runAssistant } from "@/lib/assistant/agent";
 import { createDailyLimiter } from "@/lib/assistant/limits";
-import { AssistantError, openAiCompatibleChat } from "@/lib/assistant/llm";
+import { AssistantError, openAiCompatibleChat, withFallback } from "@/lib/assistant/llm";
 import { createTools, type Backend } from "@/lib/assistant/tools";
 import { requireUser } from "@/lib/auth/current-user";
 import { env } from "@/lib/env";
@@ -52,7 +52,14 @@ export async function askAssistant(raw: unknown): Promise<AskResult> {
     const { answer } = await runAssistant({
       question: parsed.data.question,
       history: parsed.data.history,
-      chat: openAiCompatibleChat(config),
+      chat: withFallback(
+        openAiCompatibleChat(config),
+        config.fallback && openAiCompatibleChat(config.fallback),
+        (err) =>
+          console.warn(
+            `Assistant: ${config.providerName} failed (${err.kind}: ${err.message}); using ${config.fallback?.providerName}`,
+          ),
+      ),
       tools: createTools(backend),
       today: istDay(new Date().toISOString()),
     });

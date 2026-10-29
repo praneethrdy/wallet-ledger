@@ -32,26 +32,32 @@ function read() {
  * instead. Off (and hidden) unless both a key and a model are set.
  */
 function readAssistant() {
-  const apiKey = process.env.LLM_API_KEY?.trim();
-  const model = process.env.LLM_MODEL?.trim();
-  if (!apiKey || !model) return undefined;
-  const baseUrl = (
-    process.env.LLM_BASE_URL?.trim() || "https://generativelanguage.googleapis.com/v1beta/openai"
-  ).replace(/\/+$/, "");
+  const primary = readProvider("LLM", "https://generativelanguage.googleapis.com/v1beta/openai");
+  if (!primary) return undefined;
   const limit = Number.parseInt(process.env.ASSISTANT_DAILY_LIMIT ?? "", 10);
   return {
-    apiKey,
-    model,
-    baseUrl,
+    ...primary,
+    // Used when the primary provider fails (overloaded, quota, timeout, error). Optional.
+    fallback: readProvider("LLM_FALLBACK", "https://openrouter.ai/api/v1"),
     dailyLimit: Number.isFinite(limit) && limit > 0 ? limit : 20,
-    providerName: new URL(baseUrl).hostname.includes("openrouter")
-      ? "OpenRouter"
-      : new URL(baseUrl).hostname.includes("x.ai")
-        ? "xAI"
-        : new URL(baseUrl).hostname.includes("googleapis")
-          ? "Google Gemini"
-          : new URL(baseUrl).hostname,
   };
+}
+
+/** {PREFIX}_API_KEY + {PREFIX}_MODEL (+ optional {PREFIX}_BASE_URL); undefined unless key and model are set. */
+function readProvider(prefix: string, defaultBaseUrl: string) {
+  const apiKey = process.env[`${prefix}_API_KEY`]?.trim();
+  const model = process.env[`${prefix}_MODEL`]?.trim();
+  if (!apiKey || !model) return undefined;
+  const baseUrl = (process.env[`${prefix}_BASE_URL`]?.trim() || defaultBaseUrl).replace(/\/+$/, "");
+  return { apiKey, model, baseUrl, providerName: providerName(baseUrl) };
+}
+
+function providerName(baseUrl: string): string {
+  const host = new URL(baseUrl).hostname;
+  if (host.includes("openrouter")) return "OpenRouter";
+  if (host.includes("x.ai")) return "xAI";
+  if (host.includes("googleapis")) return "Google Gemini";
+  return host;
 }
 
 export const env = read();

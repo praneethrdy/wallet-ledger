@@ -143,9 +143,11 @@ export function AssistantChat({ provider, dailyLimit }: { provider: string; dail
       <p className="flex items-start gap-2 px-1 text-xs text-muted-foreground">
         <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
         <span>
-          Read-only: it can look at your wallets and transactions, never move money. Your question and the matching
-          transaction data are sent to {provider} to write the answer. AI can make mistakes; amounts come from your
-          ledger. {dailyLimit} questions a day.
+          Read-only: it can look at your wallets and transactions and can’t move money. Your question and the matching
+          transaction data are sent to {provider} to write the answer.
+          {provider.startsWith("Google Gemini") &&
+            " On Gemini’s free tier, Google may use questions to improve its products, so don’t include anything private."}{" "}
+          AI can make mistakes; amounts come from your ledger. {dailyLimit} questions a day.
         </span>
       </p>
     </div>

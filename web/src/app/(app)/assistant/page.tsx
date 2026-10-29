@@ -29,5 +29,11 @@ async function Assistant() {
   // Decide at request time, not at build time: the key may be set only on the running server.
   await connection();
   if (!env.assistant) notFound(); // hidden unless an LLM key is configured
-  return <AssistantChat provider={env.assistant.providerName} dailyLimit={env.assistant.dailyLimit} />;
+  const { providerName, fallback, dailyLimit } = env.assistant;
+  return (
+    <AssistantChat
+      provider={fallback ? `${providerName} (or ${fallback.providerName} as a backup)` : providerName}
+      dailyLimit={dailyLimit}
+    />
+  );
 }

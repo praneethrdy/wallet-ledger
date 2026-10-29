@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { runAssistant, systemPrompt } from "./agent";
 import { createDailyLimiter } from "./limits";
-import { AssistantError, openAiCompatibleChat, type ChatFn, type ChatMessage, type ChatReply } from "./llm";
+import {
+  AssistantError,
+  openAiCompatibleChat,
+  withFallback,
+  type ChatFn,
+  type ChatMessage,
+  type ChatReply,
+} from "./llm";
 import { createTools, type Backend, type TxRow } from "./tools";
 
 const WALLETS = [
@@ -239,5 +246,50 @@ describe("createDailyLimiter", () => {
     expect(limiter.take("u2")).toBe(true);
     now = Date.parse("2026-10-29T19:00:00Z"); // 00:30 IST on the 30th
     expect(limiter.take("u1")).toBe(true);
+  });
+});
+
+describe("withFallback", () => {
+  const ok = (content: string): ChatFn => vi.fn(async () => ({ content }));
+  const failing = (kind: "rate_limited" | "provider" | "timeout"): ChatFn =>
+    vi.fn(async () => {
+      throw new AssistantError(kind, "Model returned HTTP 503");
+    });
+
+  it("uses only the primary when it works", async () => {
+    const backup = ok("backup");
+    expect(await withFallback(ok("primary"), backup)([], [])).toEqual({ content: "primary" });
+    expect(backup).not.toHaveBeenCalled();
+  });
+
+  it("asks the backup with the same conversation when the primary fails", async () => {
+    const backup = ok("from OpenRouter");
+    const notice = vi.fn();
+    const messages: ChatMessage[] = [{ role: "user", content: "spent?" }];
+    expect(await withFallback(failing("provider"), backup, notice)(messages, [])).toEqual({
+      content: "from OpenRouter",
+    });
+    expect(backup).toHaveBeenCalledWith(messages, []);
+    expect(notice).toHaveBeenCalledWith(expect.objectContaining({ kind: "provider" }));
+  });
+
+  it("reports the backup's error when both fail", async () => {
+    await expect(withFallback(failing("provider"), failing("rate_limited"))([], [])).rejects.toMatchObject({
+      kind: "rate_limited",
+    });
+  });
+
+  it("is just the primary when no backup is configured", async () => {
+    const primary = failing("timeout");
+    expect(withFallback(primary, undefined)).toBe(primary);
+  });
+
+  it("doesn't hide programming errors behind the backup", async () => {
+    const broken: ChatFn = async () => {
+      throw new TypeError("bug");
+    };
+    const backup = ok("backup");
+    await expect(withFallback(broken, backup)([], [])).rejects.toBeInstanceOf(TypeError);
+    expect(backup).not.toHaveBeenCalled();
   });
 });
