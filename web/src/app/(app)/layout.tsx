@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { Logo } from "@/components/brand/logo";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
 import { navFor } from "@/components/shell/nav-items";
 import { NavLinks } from "@/components/shell/nav-links";
 import { UserMenu } from "@/components/shell/user-menu";
@@ -34,9 +35,13 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 sm:py-10">
+      <main className="mx-auto max-w-[1280px] px-4 pt-8 pb-32 sm:px-6 sm:pt-10 md:pb-10">
         <QueryProvider>{children}</QueryProvider>
       </main>
+      {/* Outside the header: its backdrop blur would otherwise pin a fixed bar to the header. */}
+      <Suspense>
+        <CustomerTabBar />
+      </Suspense>
     </div>
   );
 }
@@ -44,6 +49,11 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
 async function RoleNav() {
   const user = await requireUser();
   return <NavLinks items={navFor(user.role, { assistant: Boolean(env.assistant) })} />;
+}
+
+async function CustomerTabBar() {
+  const user = await requireUser();
+  return user.role === "CUSTOMER" ? <MobileTabBar /> : null;
 }
 
 async function AccountMenu() {

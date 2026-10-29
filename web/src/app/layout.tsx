@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  viewportFit: "cover", // lets the mobile tab bar pad itself clear of the home indicator
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafafa" },
     { media: "(prefers-color-scheme: dark)", color: "#09090b" },
@@ -36,7 +37,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>
             {children}
-            <Toaster position="bottom-right" />
+            {/* On phones, toasts clear the customer tab bar. */}
+            <Toaster position="bottom-right" mobileOffset={{ bottom: 96 }} />
           </TooltipProvider>
         </ThemeProvider>
       </body>

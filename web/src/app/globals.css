@@ -188,6 +188,14 @@
   --animate-shine: shine 6s ease-in-out infinite;
   --animate-orbit: orbit 24s linear infinite;
   --animate-grow-x: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-page-in: page-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 
 @keyframes grow-x {

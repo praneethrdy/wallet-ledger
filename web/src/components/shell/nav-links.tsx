@@ -20,7 +20,7 @@ function matchLength(pathname: string, item: NavItem): number {
 }
 
 /** The item with the most specific match wins: "/admin" must not light up on "/admin/wallets". */
-function isActive(pathname: string, item: NavItem, all: NavItem[]) {
+export function isActive(pathname: string, item: NavItem, all: NavItem[]) {
   const mine = matchLength(pathname, item);
   return mine >= 0 && all.every((other) => other === item || matchLength(pathname, other) < mine);
 }
