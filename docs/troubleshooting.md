@@ -59,8 +59,11 @@ A "No open ports detected, continuing to scan" line *during* a slow startup is n
 `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=65 -XX:+ExitOnOutOfMemoryError -XX:+UseSerialGC`, or move
 the backend to a paid instance.
 
-### Site takes ~1 minute to load the first time
-**Cause:** free Render services sleep after ~15 minutes idle (cold start). Not a bug.
+### Site takes ~1 minute to load the first time, or sign-in says "The server is waking up" (happened)
+**Cause:** free Render services sleep after ~15 minutes idle (cold start). The frontend wakes first;
+the backend (Spring Boot on a small CPU) takes 1 to 2 minutes. Until then, backend calls fail: the
+frontend gives up after 30 s, or Render's edge answers 502/503/504, and the app shows
+"The server is waking up or briefly unreachable... Try again in about a minute." Not a bug.
 **Fix:** wait, or use a paid instance. An uptime pinger can keep it awake, but the free plan's
 monthly hours are limited.
 

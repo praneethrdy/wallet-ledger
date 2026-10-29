@@ -42,9 +42,13 @@ export class ApiError extends Error {
   }
 }
 
-/** For responses without a problem body (e.g. a proxy's HTML 502). */
+/**
+ * For responses without a problem body. 502/503/504 without one come from a proxy in front of
+ * the backend (e.g. Render's edge while a free instance wakes up), not from the backend itself:
+ * the backend is unreachable, the same as a failed or timed-out connection.
+ */
 function codeForStatus(status: number): string {
-  if (status === 0) return "NETWORK_ERROR";
+  if (status === 0 || status === 502 || status === 503 || status === 504) return "NETWORK_ERROR";
   if (status === 401) return "UNAUTHORIZED";
   if (status === 403) return "FORBIDDEN";
   if (status === 404) return "NOT_FOUND";
@@ -75,7 +79,8 @@ const MESSAGES: Record<string, string> = {
   RATE_LIMITED: "Too many attempts. Please wait a moment and try again.",
   PAYLOAD_TOO_LARGE: "That request is too large.",
   REQUEST_REJECTED: "That request couldn't be processed.",
-  NETWORK_ERROR: "We couldn't reach the server. Check your connection and try again.",
+  NETWORK_ERROR:
+    "The server is waking up or briefly unreachable (free hosting sleeps when idle). Try again in about a minute.",
   INTERNAL_ERROR: GENERIC_MESSAGE,
 };
 

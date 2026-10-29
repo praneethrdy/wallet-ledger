@@ -16,9 +16,19 @@ describe("ApiError", () => {
   });
 
   it("derives a code from the status when there is no problem body", () => {
-    expect(new ApiError(502, undefined).code).toBe("INTERNAL_ERROR");
+    expect(new ApiError(500, undefined).code).toBe("INTERNAL_ERROR");
     expect(new ApiError(404, undefined).code).toBe("NOT_FOUND");
     expect(new ApiError(0, undefined).code).toBe("NETWORK_ERROR");
+  });
+
+  it("treats a proxy's 502/503/504 (no problem body) as the backend being unreachable", () => {
+    for (const status of [502, 503, 504]) {
+      const err = new ApiError(status, undefined);
+      expect(err.code).toBe("NETWORK_ERROR");
+      expect(toActionError(err).message).toMatch(/waking up/);
+    }
+    // A 503 the backend itself sends (with a problem body) keeps its own code.
+    expect(new ApiError(503, { code: "SOMETHING_SPECIFIC" }).code).toBe("SOMETHING_SPECIFIC");
   });
 
   it("treats 5xx and unknown codes as unexpected", () => {

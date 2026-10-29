@@ -15,6 +15,12 @@ export type Schemas = components["schemas"];
  * The ONLY way the web app talks to the backend: server-side, typed from openapi.json,
  * with the access token taken from the encrypted session cookie.
  */
+/**
+ * Longest we wait for the backend. Normal calls take well under a second (a login ~2-5 s); a free
+ * instance waking up takes a minute or more, and the user is better off told so than left hanging.
+ */
+const BACKEND_TIMEOUT_MS = 30_000;
+
 function makeClient(accessToken?: string): Client<paths> {
   return createClient<paths>({
     baseUrl: env.apiBaseUrl,
@@ -23,6 +29,8 @@ function makeClient(accessToken?: string): Client<paths> {
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     cache: "no-store",
+    // A timeout throws, which unwrap() reports as NETWORK_ERROR ("the server is waking up").
+    fetch: (request: Request) => fetch(request, { signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) }),
   });
 }
 
