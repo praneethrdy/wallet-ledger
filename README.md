@@ -254,6 +254,8 @@ Created on startup in the `dev` profile only (`DevDataSeeder`), along with two f
 
 ## Documentation
 
+- [docs/deploy-guide.md](docs/deploy-guide.md): step-by-step free deployment (Neon + Render), as done for the live demo.
+- [docs/troubleshooting.md](docs/troubleshooting.md): problems seen so far and their fixes.
 - [web/README.md](web/README.md): the frontend: setup, architecture (BFF, token refresh, idempotency) and tests.
 - [docs/decisions.md](docs/decisions.md): 17 architecture decision records.
 - [docs/ledger-design.md](docs/ledger-design.md): the data model, sign convention and invariants.
