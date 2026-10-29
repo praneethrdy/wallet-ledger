@@ -186,6 +186,13 @@
   /* Landing page: the facts ribbon glides left to right; numbers catch a passing light. */
   --animate-marquee-ltr: marquee-ltr 48s linear infinite;
   --animate-shine: shine 6s ease-in-out infinite;
+  --animate-orbit: orbit 24s linear infinite;
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes marquee-ltr {

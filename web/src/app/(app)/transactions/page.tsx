@@ -8,6 +8,7 @@ import { api, get } from "@/lib/api/client";
 import { parseTxFilters, txApiQuery, txFiltersQuery } from "@/lib/tx-filters";
 
 import { TransactionFilters } from "@/components/ledger/transaction-filters";
+import { QuickActions } from "@/components/ledger/quick-actions";
 import { TransactionList } from "@/components/ledger/transaction-list";
 
 export const metadata: Metadata = { title: "Transactions" };
@@ -37,7 +38,13 @@ async function Transactions({ searchParams }: { searchParams: PageProps<"/transa
       <TransactionFilters key={filters.reference ?? ""} wallets={wallets} filters={filters} />
       <Card className="gap-0 px-2 py-2">
         {/* Keyed by the filters: new filters start a fresh list (and cursor) from the server's first page. */}
-        <TransactionList key={query} query={query} filtered={query !== ""} firstPage={firstPage} />
+        <TransactionList
+          key={query}
+          query={query}
+          filtered={query !== ""}
+          firstPage={firstPage}
+          emptyAction={<QuickActions />}
+        />
       </Card>
     </div>
   );

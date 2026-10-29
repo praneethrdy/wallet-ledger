@@ -1,10 +1,11 @@
-import { ArrowDownLeftIcon, ArrowUpRightIcon, PlusIcon, SendIcon, WalletIcon } from "lucide-react";
+import { ArrowDownLeftIcon, ArrowUpRightIcon, PlusIcon, WalletIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
 import { Amount } from "@/components/ledger/amount";
+import { QuickActions } from "@/components/ledger/quick-actions";
 import { StatCard } from "@/components/ledger/stat-card";
 import { StatusBadge } from "@/components/ledger/status-badge";
 import { TransactionRow } from "@/components/ledger/transaction-row";
@@ -16,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, get } from "@/lib/api/client";
-import { requireUser } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -35,26 +35,6 @@ export default function DashboardPage() {
       <Suspense fallback={<DashboardSkeleton />}>
         <Dashboard />
       </Suspense>
-    </>
-  );
-}
-
-/** Customers move money; an admin sees its own wallets here but can't transfer or deposit. */
-async function QuickActions() {
-  const user = await requireUser();
-  if (user.role !== "CUSTOMER") return null;
-  return (
-    <>
-      <Button variant="outline" asChild>
-        <Link href="/deposit">
-          <PlusIcon /> Add money
-        </Link>
-      </Button>
-      <Button asChild>
-        <Link href="/transfer">
-          <SendIcon /> Send money
-        </Link>
-      </Button>
     </>
   );
 }
@@ -183,7 +163,11 @@ async function Dashboard() {
         </CardHeader>
         <CardContent className="px-2">
           {summary.recentTransactions.length === 0 ? (
-            <EmptyState title="No transactions yet" description="Add money or make a transfer to see it here." />
+            <EmptyState
+              title="No transactions yet"
+              description="Add money or make a transfer to see it here."
+              action={<QuickActions />}
+            />
           ) : (
             <div className="space-y-0.5">
               {summary.recentTransactions.map((tx) => (

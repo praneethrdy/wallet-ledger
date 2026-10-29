@@ -24,12 +24,15 @@ export function TransactionList({
   firstPage,
   basePath = "/transactions",
   bffPath = "/bff/transactions",
+  emptyAction,
 }: {
   query: string;
   filtered: boolean;
   firstPage: Page;
   basePath?: string;
   bffPath?: string;
+  /** The next step under "No transactions yet" (the customer page passes its money buttons). */
+  emptyAction?: React.ReactNode;
 }) {
   const list = useCursorList([bffPath, query], `${bffPath}?${query}`, firstPage);
 
@@ -50,6 +53,7 @@ export function TransactionList({
         icon={<ReceiptTextIcon />}
         title="No transactions yet"
         description="Add money or make a transfer and it will show up here."
+        action={emptyAction}
       />
     );
   }
